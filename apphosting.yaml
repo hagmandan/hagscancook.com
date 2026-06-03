@@ -3,55 +3,40 @@
 
 runConfig:
   runtime: nodejs20
-  concurrency: 80
+  cpu: 1
+  memoryMiB: 1024
+  concurrency: 20
+  minInstances: 0
+  maxInstances: 5
 
 env:
-  # ------------------------------------------------------------------
-  # Secrets (stored in Cloud Secret Manager)
-  #
-  # Create/update with:
-  #   firebase apphosting:secrets:set DATABASE_URL
-  #   firebase apphosting:secrets:set FIREBASE_SERVICE_ACCOUNT_KEY
-  #
-  # The `secret:` key references the secret by name. The actual value
-  # is never committed to source control.
-  # ------------------------------------------------------------------
   - variable: DATABASE_URL
     secret: DATABASE_URL
-
-  - variable: FIREBASE_SERVICE_ACCOUNT_KEY
-    secret: FIREBASE_SERVICE_ACCOUNT_KEY
+    availability:
+      - RUNTIME
 
   - variable: DIRECT_URL
     secret: DIRECT_URL
+    availability:
+      - RUNTIME
+
+  - variable: FIREBASE_SERVICE_ACCOUNT_KEY
+    secret: FIREBASE_SERVICE_ACCOUNT_KEY
+    availability:
+      - RUNTIME
 
   - variable: NEXT_PUBLIC_SENTRY_DSN
     secret: NEXT_PUBLIC_SENTRY_DSN
+    availability:
+      - RUNTIME
 
   - variable: NEXT_PUBLIC_APP_ENV
     value: production
+    availability:
+      - RUNTIME
+      - BUILD
 
   - variable: SENTRY_AUTH_TOKEN
     secret: SENTRY_AUTH_TOKEN
-  # ------------------------------------------------------------------
-  # NEXT_PUBLIC_FIREBASE_* variables
-  #
-  # Firebase App Hosting auto-injects FIREBASE_WEBAPP_CONFIG at build
-  # time, so the Firebase JS SDK initialises without these vars in
-  # production. They are only needed in .env.local for local dev.
-  #
-  # Uncomment the block below ONLY if you have a non-standard setup
-  # that requires explicit values (e.g. staging override).
-  # ------------------------------------------------------------------
-  # - variable: NEXT_PUBLIC_FIREBASE_API_KEY
-  #   value: "your-api-key"
-  # - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-  #   value: "hagscancook.firebaseapp.com"
-  # - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
-  #   value: "hagscancook"
-  # - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-  #   value: "hagscancook.appspot.com"
-  # - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-  #   value: "your-sender-id"
-  # - variable: NEXT_PUBLIC_FIREBASE_APP_ID
-  #   value: "your-app-id"
+    availability:
+      - BUILD
