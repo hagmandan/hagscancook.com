@@ -24,6 +24,15 @@ env:
 
   - variable: DIRECT_URL
     secret: DIRECT_URL
+
+  - variable: NEXT_PUBLIC_SENTRY_DSN
+    secret: NEXT_PUBLIC_SENTRY_DSN
+
+  - variable: NEXT_PUBLIC_APP_ENV
+    value: production
+
+  - variable: SENTRY_AUTH_TOKEN
+    secret: SENTRY_AUTH_TOKEN
   # ------------------------------------------------------------------
   # NEXT_PUBLIC_FIREBASE_* variables
   #

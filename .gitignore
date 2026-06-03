@@ -55,3 +55,5 @@ skills-lock.json
 
 # local certificates/secrets
 /certificates/
+# Sentry Config File
+.env.sentry-build-plugin
