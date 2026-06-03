@@ -1,0 +1,232 @@
+// Prisma schema for hagscancook.com
+// Database: Neon PostgreSQL (free tier)
+// ORM: Prisma 7
+//
+// Run `prisma migrate dev` to apply changes to your local DB.
+// Run `prisma generate` to regenerate the Prisma client after schema changes.
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+/** The role assigned to a user. Chef is equivalent to User for MVP — reserved
+ *  for a future paid tier. */
+enum Role {
+  user
+  chef
+  admin
+}
+
+/** Publication state of a recipe. */
+enum RecipeStatus {
+  draft
+  published
+}
+
+// ---------------------------------------------------------------------------
+// Users
+// ---------------------------------------------------------------------------
+
+/** A registered hagscancook user. Created on first Firebase Auth login via
+ *  an upsert keyed on firebaseUid. */
+model User {
+  id          String   @id @default(uuid())
+  /** Firebase Auth UID — used to link the Auth identity to this DB row. */
+  firebaseUid String   @unique @map("firebase_uid")
+  email       String   @unique
+  displayName String   @map("display_name")
+  avatarUrl   String?  @map("avatar_url")
+  role        Role     @default(user)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  recipes     Recipe[]
+  favorites   Favorite[]
+
+  @@map("users")
+}
+
+// ---------------------------------------------------------------------------
+// Recipes
+// ---------------------------------------------------------------------------
+
+/** A recipe authored by a user. Soft-deleted via deletedAt rather than
+ *  hard deletion so author history and admin audit trails are preserved. */
+model Recipe {
+  id          String        @id @default(uuid())
+  /** URL-safe slug auto-generated from title server-side (with collision handling). */
+  slug        String        @unique
+  title       String
+  description String
+  coverImageUrl String?     @map("cover_image_url")
+  prepTimeMins  Int?        @map("prep_time_mins")
+  cookTimeMins  Int?        @map("cook_time_mins")
+  servings      Int?
+  status        RecipeStatus @default(draft)
+  /** Single cuisine from the predefined CUISINES constant list in src/lib/constants/cuisines.ts */
+  cuisine       String?
+  /** Difficulty level: "Easy" | "Medium" | "Advanced". Null = not specified. */
+  difficulty    String?
+  /** Multiple dietary restrictions from the DIETARY_RESTRICTIONS constant list.
+   *  Stored as a PostgreSQL text[] array — no junction table needed for MVP. */
+  dietaryRestrictions String[] @map("dietary_restrictions")
+  /** Cooking methods used in this recipe (e.g. "Sautéed", "Baked").
+   *  Free-text values from COOKING_METHODS constant; custom values allowed.
+   *  Stored as a PostgreSQL text[] array — same pattern as dietaryRestrictions. */
+  cookingMethods String[] @map("cooking_methods")
+  /** Original source URL for imported recipes. Null for user-created recipes. */
+  sourceUrl     String?  @map("source_url")
+  /** Human-readable attribution for imported recipes (e.g. site name or author).
+   *  Null for user-created recipes. */
+  sourceAttribution String? @map("source_attribution")
+  authorId      String        @map("author_id")
+  /** Soft delete timestamp. When set, this recipe is excluded from all feeds
+   *  and search results but data is preserved. Never hard-delete recipes. */
+  deletedAt     DateTime?     @map("deleted_at")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  /** Automatically updated by Prisma on every write. */
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  author              User               @relation(fields: [authorId], references: [id])
+  steps               Step[]
+  recipeIngredients   RecipeIngredient[]
+  tags                RecipeTag[]
+  favorites           Favorite[]
+
+  @@map("recipes")
+}
+
+// ---------------------------------------------------------------------------
+// Steps
+// ---------------------------------------------------------------------------
+
+/** A single instruction step in a recipe. Stored as free-form text for MVP.
+ *
+ *  Future (v1.2): Add stepType enum (cook | prep | wait | text) and nullable
+ *  fields for tempValue, tempUnit, durationValue, durationUnit, method — no
+ *  restructuring needed, just additive column additions. */
+model Step {
+  id       String  @id @default(uuid())
+  recipeId String  @map("recipe_id")
+  /** 1-based display order. Managed by dnd-kit on the client. */
+  order    Int
+  content  String
+
+  recipe   Recipe  @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@map("steps")
+}
+
+// ---------------------------------------------------------------------------
+// Ingredient taxonomy
+// ---------------------------------------------------------------------------
+
+/** A canonical ingredient type category (e.g. "Produce", "Dairy").
+ *  Seeded via prisma/seed.ts — admin-managed, not user-editable. */
+model IngredientType {
+  id   String @id @default(uuid())
+  name String @unique
+  slug String @unique
+
+  ingredients Ingredient[]
+
+  @@map("ingredient_types")
+}
+
+/** A canonical ingredient (e.g. "garlic", "olive oil").
+ *  Shared across all recipes. Authors search/create from this list when
+ *  building their recipe's ingredient rows. */
+model Ingredient {
+  id     String         @id @default(uuid())
+  /** Lowercase canonical name, unique across all ingredients. */
+  name   String         @unique
+  typeId String         @map("type_id")
+
+  type              IngredientType     @relation(fields: [typeId], references: [id])
+  recipeIngredients RecipeIngredient[]
+
+  @@map("ingredients")
+}
+
+/** A recipe-specific usage of a canonical ingredient — the "recipe ingredient"
+ *  layer that captures how an ingredient is used in a particular recipe.
+ *
+ *  Example: canonical ingredient "garlic" → recipe ingredient
+ *  "3 cloves garlic, grated". */
+model RecipeIngredient {
+  id           String     @id @default(uuid())
+  recipeId     String     @map("recipe_id")
+  ingredientId String     @map("ingredient_id")
+  /** Free-text quantity (e.g. "3", "1/2", "a handful", "to taste"). */
+  quantity     String
+  /** Optional unit (e.g. "cloves", "cup", "tbsp"). */
+  unit         String?
+  /** Optional preparation note (e.g. "grated", "crushed", "finely diced"). */
+  preparation  String?
+  /** Optional group heading shown above this ingredient row
+   *  (e.g. "For the sauce", "For the dough"). */
+  groupLabel   String?    @map("group_label")
+  /** Raw ingredient string preserved from import sources (e.g. "3 cups flour, sifted").
+   *  Null for manually-authored recipes. Used as display fallback for imported recipes. */
+  display      String?
+  /** Display order within the recipe, managed by dnd-kit on the client. */
+  order        Int
+
+  recipe     Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id])
+
+  @@map("recipe_ingredients")
+}
+
+// ---------------------------------------------------------------------------
+// Tags
+// ---------------------------------------------------------------------------
+
+/** A recipe tag. Admin-managed for MVP (no user-created tags yet).
+ *  Seeded with an initial set via prisma/seed.ts. */
+model Tag {
+  id   String      @id @default(uuid())
+  name String      @unique
+  slug String      @unique
+
+  recipes RecipeTag[]
+
+  @@map("tags")
+}
+
+/** Junction table linking recipes to tags (many-to-many). */
+model RecipeTag {
+  recipeId String @map("recipe_id")
+  tagId    String @map("tag_id")
+
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  tag    Tag    @relation(fields: [tagId], references: [id])
+
+  @@id([recipeId, tagId])
+  @@map("recipe_tags")
+}
+
+// ---------------------------------------------------------------------------
+// Favorites
+// ---------------------------------------------------------------------------
+
+/** Records a user saving a recipe to their favorites list. */
+model Favorite {
+  userId    String   @map("user_id")
+  recipeId  String   @map("recipe_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user   User   @relation(fields: [userId], references: [id])
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@id([userId, recipeId])
+  @@map("favorites")
+}

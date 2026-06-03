@@ -1,0 +1,109 @@
+@import "tailwindcss";
+
+/* ─────────────────────────────────────────────────────────────────
+   Design tokens — light mode
+   Brand palette: #eae4e3 (warm cream) · #714b41 (rich warm brown)
+   Derived tints honour the hue of each anchor colour.
+───────────────────────────────────────────────────────────────── */
+:root {
+  /* Page + surface backgrounds */
+  --color-bg:             #eae4e3;   /* warm cream — behind cards */
+  --color-surface:        #ffffff;   /* cards, inputs, header */
+  --color-surface-raised: #f5ecea;   /* chips, stats boxes, hover fills */
+
+  /* Borders */
+  --color-border:         #ddd4cf;   /* card borders, input borders */
+  --color-border-subtle:  #ece6e4;   /* table dividers, section separators */
+
+  /* Text scale */
+  --color-text:           #2a1a16;   /* headings, primary body */
+  --color-text-2:         #5a3d37;   /* secondary body, button labels */
+  --color-text-3:         #7a5a53;   /* tertiary, descriptions */
+  --color-text-4:         #a08880;   /* muted, placeholders, hints */
+
+  /* Brand — warm brown */
+  --color-brand:          #714b41;
+  --color-brand-hover:    #5c3c33;
+  --color-brand-text:     #ffffff;   /* text on brand-coloured bg */
+  --color-brand-tint:     #f0e5e2;   /* very light brand wash for active chips */
+  --color-focus-ring:     rgba(113, 75, 65, 0.15);
+
+  /* Semantic — error / danger */
+  --color-error:          #b91c1c;
+  --color-error-bg:       #fef2f2;
+  --color-error-border:   #fecaca;
+
+  /* Semantic — success */
+  --color-success:        #15803d;
+  --color-success-bg:     #f0fdf4;
+  --color-success-border: #bbf7d0;
+
+  /* Semantic — warning */
+  --color-warning-text:   #92400e;
+  --color-warning-bg:     #fef9c3;
+  --color-warning-border: #fde68a;
+
+  /* Semantic — dietary */
+  --color-dietary:        #059669;
+  --color-dietary-bg:     #ecfdf5;
+  --color-dietary-border: #a7f3d0;
+
+  /* Tailwind / legacy aliases */
+  --background: var(--color-bg);
+  --foreground: var(--color-text);
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   Design tokens — dark mode (warm dark, not generic grey)
+   Applied via: document.documentElement.setAttribute('data-theme', 'dark')
+───────────────────────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --color-bg:             #1a100e;
+  --color-surface:        #261a17;
+  --color-surface-raised: #311f1b;
+
+  --color-border:         #4a2e27;
+  --color-border-subtle:  #3a2219;
+
+  --color-text:           #f0e8e5;
+  --color-text-2:         #d4b0a4;
+  --color-text-3:         #a87a70;
+  --color-text-4:         #7a5a53;
+
+  --color-brand:          #d4a090;
+  --color-brand-hover:    #e0b0a0;
+  --color-brand-text:     #1a100e;
+  --color-brand-tint:     #3d2520;
+  --color-focus-ring:     rgba(212, 160, 144, 0.2);
+
+  --color-error:          #f87171;
+  --color-error-bg:       #2d1515;
+  --color-error-border:   #7f1d1d;
+
+  --color-success:        #4ade80;
+  --color-success-bg:     #052e16;
+  --color-success-border: #166534;
+
+  --color-warning-text:   #fde047;
+  --color-warning-bg:     #292900;
+  --color-warning-border: #854d0e;
+
+  --color-dietary:        #34d399;
+  --color-dietary-bg:     #052e16;
+  --color-dietary-border: #166534;
+
+  --background: var(--color-bg);
+  --foreground: var(--color-text);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist);
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-geist, system-ui, sans-serif);
+}

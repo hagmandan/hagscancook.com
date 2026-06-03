@@ -12,9 +12,6 @@
 
 # testing
 /coverage
-/playwright-report/
-/tests/screenshots/
-.playwright-mcp/
 
 # next.js
 /.next/
@@ -25,7 +22,6 @@
 
 # misc
 .DS_Store
-.superpowers/
 *.pem
 
 # debug
@@ -43,6 +39,19 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-.env.local
 
-certificates
+# sentry
+.sentryclirc
+
+# local agent/tool artifacts
+.superpowers/
+.agents/skills/
+skills-lock.json
+
+# playwright/local test artifacts
+/playwright-report/
+/tests/screenshots/
+.playwright-mcp/
+
+# local certificates/secrets
+/certificates/

@@ -1,0 +1,197 @@
+.layout {
+  display: flex;
+  min-height: calc(100vh - 4rem);
+  max-width: 80rem;
+  margin: 0 auto;
+}
+
+.sidebar {
+  width: 13rem;
+  flex-shrink: 0;
+  border-right: 1px solid var(--color-border);
+  padding: 2rem 1rem 2rem 1.5rem;
+}
+
+.sidebarLabel {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-4);
+  margin: 0 0 0.75rem 0.375rem;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.navLink {
+  display: block;
+  padding: 0.4375rem 0.625rem;
+  border-radius: 0.4375rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--color-text-2);
+  text-decoration: none;
+  transition: background-color 0.1s ease, color 0.1s ease;
+}
+
+.navLink:hover {
+  background-color: var(--color-surface-raised);
+  color: var(--color-text);
+}
+
+.main {
+  flex: 1;
+  padding: 2rem 2rem 5rem;
+  min-width: 0;
+}
+
+/* Shared table styles used across all admin pages */
+.pageTitle {
+  font-size: 1.375rem;
+  font-weight: 800;
+  color: var(--color-text);
+  margin: 0 0 1.5rem;
+  letter-spacing: -0.02em;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+.table th {
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-text-4);
+  padding: 0.5rem 0.75rem;
+  border-bottom: 2px solid var(--color-border-subtle);
+}
+
+.table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--color-border-subtle);
+  color: var(--color-text-2);
+  vertical-align: middle;
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.tableLink {
+  color: var(--color-text);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.tableLink:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badgePublished {
+  background-color: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.badgeDraft {
+  background-color: var(--color-warning-bg);
+  color: var(--color-warning-text);
+}
+
+.actionBtn {
+  padding: 0.3125rem 0.625rem;
+  border-radius: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  color: var(--color-text-2);
+  transition: background-color 0.1s ease;
+}
+
+.actionBtn:hover { background-color: var(--color-surface-raised); }
+
+.dangerBtn {
+  border-color: var(--color-error-border);
+  color: var(--color-error);
+}
+
+.dangerBtn:hover { background-color: var(--color-error-bg); }
+
+/* Inline add form */
+.addForm {
+  display: flex;
+  gap: 0.625rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.addInput {
+  padding: 0.4375rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  font-size: 0.9375rem;
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  min-width: 14rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.addInput:focus {
+  outline: none;
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
+}
+
+.addSelect {
+  padding: 0.4375rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  font-size: 0.9375rem;
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  cursor: pointer;
+}
+
+.addSelect:focus {
+  outline: none;
+  border-color: var(--color-brand);
+}
+
+.addBtn {
+  padding: 0.4375rem 1rem;
+  border: none;
+  border-radius: 0.5rem;
+  background-color: var(--color-brand);
+  color: var(--color-brand-text);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.addBtn:hover { background-color: var(--color-brand-hover); }
+
+.formError {
+  color: var(--color-error);
+  font-size: 0.875rem;
+  margin: -0.75rem 0 0.75rem;
+}

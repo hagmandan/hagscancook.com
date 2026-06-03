@@ -1,0 +1,160 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.columnLabels {
+  display: grid;
+  grid-template-columns: 1.5rem 1fr 5rem 5rem 6rem 7rem 1.75rem;
+  gap: 0.5rem;
+  padding: 0 0.25rem;
+}
+
+.label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-4);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1.5rem 1fr 5rem 5rem 6rem 7rem 1.75rem;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.rowErrors {
+  grid-column: 2 / -2;
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.handle {
+  flex-shrink: 0;
+  padding: 0.25rem;
+  border: none;
+  background: none;
+  cursor: grab;
+  color: var(--color-text-4);
+  font-size: 1.125rem;
+  line-height: 1;
+  touch-action: none;
+  border-radius: 0.25rem;
+  transition: color 0.1s ease;
+}
+
+.handle:hover { color: var(--color-text-2); }
+.handle:active { cursor: grabbing; }
+
+.input {
+  width: 100%;
+  padding: 0.4375rem 0.625rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.4375rem;
+  font-size: 0.9375rem;
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  min-width: 0;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
+}
+
+.input::placeholder { color: var(--color-border); }
+
+/* Column-specific widths are controlled by the grid — no overrides needed */
+.nameInput {}
+.qtyInput {}
+.unitInput {}
+.prepInput {}
+.groupInput {}
+
+/* Ingredient name cell: stacks the name input + type selector vertically */
+.nameCell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.typeSelect {
+  width: fit-content;
+  max-width: 100%;
+  padding: 0.1875rem 1.5rem 0.1875rem 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-3);
+  background-color: var(--color-surface-raised);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23a08880' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.4rem center;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.typeSelect:focus {
+  outline: none;
+  border-color: var(--color-brand);
+  color: var(--color-text-2);
+}
+
+/* When a type is selected, show it as a brand-tinted pill */
+.typeSelect:not([value=""]):not(:invalid) {
+  background-color: var(--color-brand-tint);
+  border-color: var(--color-brand);
+  color: var(--color-brand);
+}
+
+.error {
+  font-size: 0.8125rem;
+  color: var(--color-error);
+}
+
+.removeButton {
+  padding: 0.25rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--color-text-4);
+  font-size: 0.875rem;
+  border-radius: 0.25rem;
+  transition: color 0.1s ease, background-color 0.1s ease;
+  line-height: 1;
+}
+
+.removeButton:hover {
+  color: var(--color-error);
+  background-color: var(--color-error-bg);
+}
+
+.addButton {
+  align-self: flex-start;
+  padding: 0.5rem 0.875rem;
+  border: 1px dashed var(--color-border);
+  border-radius: 0.5rem;
+  background: none;
+  color: var(--color-text-3);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+  margin-top: 0.25rem;
+}
+
+.addButton:hover {
+  border-color: var(--color-text-4);
+  color: var(--color-text-2);
+  background-color: var(--color-surface-raised);
+}

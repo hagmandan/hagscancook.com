@@ -1,0 +1,118 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+}
+
+.handle {
+  flex-shrink: 0;
+  padding: 0.5rem 0.375rem;
+  border: none;
+  background: none;
+  cursor: grab;
+  color: var(--color-text-4);
+  font-size: 1.125rem;
+  line-height: 1;
+  touch-action: none;
+  border-radius: 0.25rem;
+  transition: color 0.1s ease;
+}
+
+.handle:hover {
+  color: var(--color-text-2);
+}
+
+.handle:active {
+  cursor: grabbing;
+}
+
+.stepNum {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 9999px;
+  background-color: var(--color-brand);
+  color: var(--color-brand-text);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  margin-top: 0.375rem;
+}
+
+.textareaWrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.textarea {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  resize: vertical;
+  min-height: 4rem;
+  font-family: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
+}
+
+.error {
+  font-size: 0.8125rem;
+  color: var(--color-error);
+}
+
+.removeButton {
+  flex-shrink: 0;
+  padding: 0.375rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--color-text-4);
+  font-size: 0.875rem;
+  border-radius: 0.25rem;
+  margin-top: 0.25rem;
+  transition: color 0.1s ease, background-color 0.1s ease;
+}
+
+.removeButton:hover {
+  color: var(--color-error);
+  background-color: var(--color-error-bg);
+}
+
+.addButton {
+  align-self: flex-start;
+  padding: 0.5rem 0.875rem;
+  border: 1px dashed var(--color-border);
+  border-radius: 0.5rem;
+  background: none;
+  color: var(--color-text-3);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+}
+
+.addButton:hover {
+  border-color: var(--color-text-4);
+  color: var(--color-text-2);
+  background-color: var(--color-surface-raised);
+}

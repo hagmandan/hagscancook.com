@@ -1,0 +1,116 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.inner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 0.75rem 1.5rem;
+  flex-wrap: wrap;
+}
+
+.back {
+  font-size: 0.875rem;
+  color: var(--color-text-3);
+  text-decoration: none;
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+}
+
+.back:hover { color: var(--color-text); }
+
+.title {
+  flex: 1;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.titlePlaceholder {
+  color: var(--color-border);
+  font-weight: 400;
+}
+
+.modeToggle {
+  display: flex;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.modeButton {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-3);
+  text-decoration: none;
+  transition: background-color 0.1s ease, color 0.1s ease;
+}
+
+.modeButton:hover {
+  background-color: var(--color-surface-raised);
+  color: var(--color-text-2);
+}
+
+.modeActive {
+  background-color: var(--color-brand);
+  color: var(--color-brand-text);
+}
+
+.modeActive:hover {
+  background-color: var(--color-brand);
+  color: var(--color-brand-text);
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.draftButton {
+  padding: 0.4375rem 0.875rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  background-color: var(--color-surface);
+  color: var(--color-text-2);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.draftButton:hover:not(:disabled) {
+  background-color: var(--color-surface-raised);
+  border-color: var(--color-text-4);
+}
+
+.draftButton:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.publishButton {
+  padding: 0.4375rem 0.875rem;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  background-color: var(--color-brand);
+  color: var(--color-brand-text);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.publishButton:hover:not(:disabled) { background-color: var(--color-brand-hover); }
+.publishButton:disabled { opacity: 0.6; cursor: not-allowed; }
