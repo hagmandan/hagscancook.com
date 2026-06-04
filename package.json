@@ -5,10 +5,11 @@
   "scripts": {
     "postinstall": "prisma generate",
     "build": "next build",
-    "dev": "next dev",
+    "dev": "yarn seed:dev && next dev",
     "start": "next start",
     "lint": "next lint",
     "import-recipes": "tsx scripts/import-recipes.ts",
+    "seed:dev": "tsx prisma/dev-seed.ts",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:e2e": "playwright test",
@@ -51,5 +52,6 @@
     "tsx": "^4.19.2",
     "typescript": "^6",
     "vitest": "^4.1.8"
-  }
+  },
+  "packageManager": "yarn@4.13.0"
 }

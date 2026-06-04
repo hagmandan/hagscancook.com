@@ -50,6 +50,7 @@ skills-lock.json
 
 # playwright/local test artifacts
 /playwright-report/
+/test-results/
 /tests/screenshots/
 .playwright-mcp/
 

@@ -66,6 +66,40 @@ export interface Session {
   role: Role
 }
 
+const E2E_SESSION_COOKIE_VALUE = 'e2e-session'
+const E2E_FIREBASE_UID = 'e2e-user'
+
+async function getE2ESession(): Promise<Session | null> {
+  if (process.env.E2E_TEST_AUTH !== '1') return null
+
+  const cookieStore = await cookies()
+  const sessionCookie = cookieStore.get('__session')?.value
+  if (sessionCookie !== E2E_SESSION_COOKIE_VALUE) return null
+
+  const user = await db.user.findUnique({
+    where: { firebaseUid: E2E_FIREBASE_UID },
+    select: {
+      id: true,
+      firebaseUid: true,
+      email: true,
+      displayName: true,
+      avatarUrl: true,
+      role: true,
+    },
+  })
+
+  if (!user) return null
+
+  return {
+    userId: user.id,
+    firebaseUid: user.firebaseUid,
+    email: user.email,
+    displayName: user.displayName,
+    avatarUrl: user.avatarUrl,
+    role: user.role,
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Session helpers
 // ---------------------------------------------------------------------------
@@ -83,6 +117,9 @@ export interface Session {
  */
 export async function getSession(): Promise<Session | null> {
   try {
+    const e2eSession = await getE2ESession()
+    if (e2eSession) return e2eSession
+
     initAdmin()
 
     const cookieStore = await cookies()
