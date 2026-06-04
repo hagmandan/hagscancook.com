@@ -19,6 +19,7 @@ env:
     secret: DIRECT_URL
     availability:
       - RUNTIME
+      - BUILD
 
   - variable: FIREBASE_SERVICE_ACCOUNT_KEY
     secret: FIREBASE_SERVICE_ACCOUNT_KEY
