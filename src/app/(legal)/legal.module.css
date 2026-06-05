@@ -2,17 +2,17 @@
   display: grid;
   grid-template-columns: 14rem 1fr;
   gap: 3rem;
-  max-width: 72rem;
+  max-width: var(--layout-max);
   margin: 0 auto;
-  padding: 3rem 1.5rem 5rem;
+  padding: 3rem var(--layout-px) 5rem;
   align-items: start;
 }
 
-@media (max-width: 48rem) {
+@media (width < 48rem) {
   .page {
     grid-template-columns: 1fr;
     gap: 2rem;
-    padding: 2rem 1.25rem 4rem;
+    padding: 2rem var(--layout-px) 4rem;
   }
 }
 

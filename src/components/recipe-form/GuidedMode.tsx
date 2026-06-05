@@ -1,29 +1,23 @@
 'use client'
 
-/**
- * Guided mode — tabbed layout for first-time recipe authors.
- *
- * Tabs: Info → Ingredients → Steps → Preview
- * Tab state is held in local component state (no URL param needed).
- * All field values are preserved across tab switches because shouldUnregister
- * defaults to false in React Hook Form v7.
- */
-
 import { useState, useRef, type ChangeEvent } from 'react'
 import { type UseFormReturn } from 'react-hook-form'
 import type { RecipeFormValues } from '@/lib/schemas/recipe'
+import { LIMITS } from '@/lib/schemas/recipe'
+import { CharCounter } from '@/components/ui/CharCounter'
 import { IngredientsField } from './IngredientsField'
 import { StepsField } from './StepsField'
-import { PillSelect } from '@/components/ui/PillSelect'
+import { MultiSelect, CreatableMultiSelect } from '@/components/ui/MultiSelect'
 import { CUISINES } from '@/lib/constants/cuisines'
 import { DIETARY_RESTRICTIONS } from '@/lib/constants/dietary-restrictions'
 import { COOKING_METHODS } from '@/lib/constants/cooking-methods'
 import styles from './GuidedMode.module.css'
 
-type Tab = 'info' | 'ingredients' | 'steps' | 'preview'
+type Tab = 'about' | 'details' | 'ingredients' | 'steps' | 'preview'
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: 'info', label: 'Info' },
+  { id: 'about', label: 'About' },
+  { id: 'details', label: 'Details' },
   { id: 'ingredients', label: 'Ingredients' },
   { id: 'steps', label: 'Steps' },
   { id: 'preview', label: 'Preview' },
@@ -35,53 +29,58 @@ interface GuidedModeProps {
   ingredientTypes: { id: string; name: string }[]
 }
 
+const dietaryOptions = DIETARY_RESTRICTIONS.map((d) => ({ label: d, value: d }))
+const cookingMethodOptions = COOKING_METHODS.map((m) => ({ label: m, value: m }))
+
 export function GuidedMode({ form, tags, ingredientTypes }: GuidedModeProps) {
-  const [activeTab, setActiveTab] = useState<Tab>('info')
+  const [activeTab, setActiveTab] = useState<Tab>('about')
+  const [isUploading, setIsUploading] = useState(false)
   const { register, watch, setValue, formState: { errors } } = form
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const coverImageUrl = watch('coverImageUrl')
-  const selectedDietary = watch('dietaryRestrictions')
-  const selectedCookingMethods = watch('cookingMethods')
-  const selectedTagIds = watch('tagIds')
+  const cookingMethods = watch('cookingMethods')
+  const dietaryRestrictions = watch('dietaryRestrictions')
+  const tagIds = watch('tagIds')
   const watchedValues = watch()
+
+  const tagOptions = tags.map((t) => ({ label: t.name, value: t.id }))
 
   const tabIndex = TABS.findIndex((t) => t.id === activeTab)
   const progress = Math.round(((tabIndex + 1) / TABS.length) * 100)
 
+  const totalMins =
+    (parseInt(watchedValues.prepTimeMins) || 0) + (parseInt(watchedValues.cookTimeMins) || 0) || null
+
   async function handleCoverUpload(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    const res = await fetch('/api/upload', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ filename: file.name, contentType: file.type }),
-    })
-    if (!res.ok) return
-    const { uploadUrl, publicUrl } = (await res.json()) as { uploadUrl: string; publicUrl: string }
-    await fetch(uploadUrl, { method: 'PUT', body: file, headers: { 'Content-Type': file.type } })
-    setValue('coverImageUrl', publicUrl, { shouldDirty: true })
+    setIsUploading(true)
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: file.name, contentType: file.type }),
+      })
+      if (!res.ok) return
+      const { uploadUrl, publicUrl } = (await res.json()) as { uploadUrl: string; publicUrl: string }
+      await fetch(uploadUrl, { method: 'PUT', body: file, headers: { 'Content-Type': file.type } })
+      setValue('coverImageUrl', publicUrl, { shouldDirty: true })
+    } finally {
+      setIsUploading(false)
+    }
   }
-
-  function toggleDietary(value: string) {
-    const current = selectedDietary ?? []
-    const next = current.includes(value) ? current.filter((v) => v !== value) : [...current, value]
-    setValue('dietaryRestrictions', next, { shouldDirty: true })
-  }
-
-  function toggleTag(id: string) {
-    const current = selectedTagIds ?? []
-    const next = current.includes(id) ? current.filter((v) => v !== id) : [...current, id]
-    setValue('tagIds', next, { shouldDirty: true })
-  }
-
-  const totalMins =
-    (parseInt(watchedValues.prepTimeMins) || 0) + (parseInt(watchedValues.cookTimeMins) || 0) || null
 
   return (
     <div className={styles.wrapper}>
       {/* Progress bar */}
-      <div className={styles.progressBar} role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
+      <div
+        className={styles.progressBar}
+        role="progressbar"
+        aria-valuenow={progress}
+        aria-valuemin={0}
+        aria-valuemax={100}
+      >
         <div className={styles.progressFill} style={{ width: `${progress}%` }} />
       </div>
 
@@ -104,107 +103,158 @@ export function GuidedMode({ form, tags, ingredientTypes }: GuidedModeProps) {
       {/* Tab panels */}
       <div className={styles.panel}>
 
-        {/* Info tab */}
-        {activeTab === 'info' && (
+        {/* About tab */}
+        {activeTab === 'about' && (
           <div className={styles.fields}>
-            <p className={styles.hint}>Let&apos;s start with the basics. Fill in the recipe title and a short description.</p>
+            <p className={styles.hint}>Start with the basics — what&apos;s the recipe and what does it look like?</p>
 
-            <div className={styles.field}>
-              <label className={styles.label} htmlFor="g-title">Recipe title <span className={styles.required}>*</span></label>
-              <input id="g-title" {...register('title')} className={styles.input} placeholder="e.g. Classic Bolognese" data-testid="recipe-title" />
-              {errors.title && <span className={styles.error}>{errors.title.message}</span>}
-            </div>
+            <div className={styles.aboutGrid}>
+              {/* Left: title + description */}
+              <div className={styles.aboutMain}>
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor="g-title">
+                    Recipe title <span className={styles.required}>*</span>
+                  </label>
+                  <input
+                    id="g-title"
+                    {...register('title')}
+                    className={styles.input}
+                    placeholder="e.g. Classic Bolognese"
+                    maxLength={LIMITS.TITLE}
+                    data-testid="recipe-title"
+                  />
+                  <CharCounter value={watchedValues.title} max={LIMITS.TITLE} />
+                  {errors.title && <span className={styles.error}>{errors.title.message}</span>}
+                </div>
 
-            <div className={styles.field}>
-              <label className={styles.label} htmlFor="g-desc">Description <span className={styles.required}>*</span></label>
-              <textarea id="g-desc" {...register('description')} className={styles.textarea} placeholder="A few sentences about this recipe…" rows={3} data-testid="recipe-description" />
-              {errors.description && <span className={styles.error}>{errors.description.message}</span>}
-            </div>
-
-            <div className={styles.field}>
-              <label className={styles.label}>Cover photo</label>
-              <div className={styles.coverWrapper}>
-                {coverImageUrl
-                  ? <img src={coverImageUrl} alt="Cover" className={styles.coverPreview} /> // eslint-disable-line @next/next/no-img-element
-                  : <div className={styles.coverPlaceholder}>No photo yet</div>}
-                <input type="file" accept="image/*" ref={fileInputRef} onChange={handleCoverUpload} className={styles.fileInput} />
-                <button type="button" onClick={() => fileInputRef.current?.click()} className={styles.uploadButton}>
-                  {coverImageUrl ? 'Change photo' : 'Upload photo'}
-                </button>
-              </div>
-            </div>
-
-            <div className={styles.row3}>
-              <div className={styles.field}>
-                <label className={styles.label} htmlFor="g-prep">Prep (min)</label>
-                <input id="g-prep" type="number" min="1" {...register('prepTimeMins')} className={styles.input} placeholder="15" />
-              </div>
-              <div className={styles.field}>
-                <label className={styles.label} htmlFor="g-cook">Cook (min)</label>
-                <input id="g-cook" type="number" min="1" {...register('cookTimeMins')} className={styles.input} placeholder="30" />
-              </div>
-              <div className={styles.field}>
-                <label className={styles.label} htmlFor="g-serv">Serves</label>
-                <input id="g-serv" type="number" min="1" {...register('servings')} className={styles.input} placeholder="4" />
-              </div>
-            </div>
-
-            <div className={styles.row2}>
-              <div className={styles.field}>
-                <label className={styles.label} htmlFor="g-cuisine">Cuisine</label>
-                <select id="g-cuisine" {...register('cuisine')} className={styles.select}>
-                  <option value="">Select cuisine…</option>
-                  {CUISINES.map((c) => <option key={c} value={c}>{c}</option>)}
-                </select>
-              </div>
-              <div className={styles.field}>
-                <label className={styles.label} htmlFor="g-difficulty">Difficulty</label>
-                <select id="g-difficulty" {...register('difficulty')} className={styles.select}>
-                  <option value="">Select difficulty…</option>
-                  <option value="Easy">Easy</option>
-                  <option value="Medium">Medium</option>
-                  <option value="Advanced">Advanced</option>
-                </select>
-              </div>
-            </div>
-
-            <div className={styles.field}>
-              <span className={styles.label}>Dietary</span>
-              <div className={styles.chipGroup}>
-                {DIETARY_RESTRICTIONS.map((d) => (
-                  <button key={d} type="button" onClick={() => toggleDietary(d)}
-                    className={`${styles.chip} ${selectedDietary?.includes(d) ? styles.chipActive : ''}`}>
-                    {d}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className={styles.field}>
-              <label className={styles.label} htmlFor="g-cookingMethods">Cook style</label>
-              <PillSelect
-                id="g-cookingMethods"
-                options={[...COOKING_METHODS]}
-                value={selectedCookingMethods ?? []}
-                onChange={(v) => setValue('cookingMethods', v, { shouldDirty: true })}
-                placeholder="e.g. Sautéed, Baked, Grilled…"
-                allowCustom
-              />
-            </div>
-
-            {tags.length > 0 && (
-              <div className={styles.field}>
-                <span className={styles.label}>Tags</span>
-                <div className={styles.chipGroup}>
-                  {tags.map((t) => (
-                    <button key={t.id} type="button" onClick={() => toggleTag(t.id)}
-                      className={`${styles.chip} ${selectedTagIds?.includes(t.id) ? styles.chipActive : ''}`}>
-                      {t.name}
-                    </button>
-                  ))}
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor="g-desc">
+                    Description <span className={styles.required}>*</span>
+                  </label>
+                  <textarea
+                    id="g-desc"
+                    {...register('description')}
+                    className={styles.textarea}
+                    placeholder="A few sentences about this recipe…"
+                    rows={5}
+                    maxLength={LIMITS.DESCRIPTION}
+                    data-testid="recipe-description"
+                  />
+                  <CharCounter value={watchedValues.description} max={LIMITS.DESCRIPTION} />
+                  {errors.description && <span className={styles.error}>{errors.description.message}</span>}
                 </div>
               </div>
-            )}
+
+              {/* Right: cover photo */}
+              <div className={styles.field}>
+                <label className={styles.label}>Cover photo</label>
+                <div className={styles.coverWrapper}>
+                  {coverImageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={coverImageUrl} alt="Cover" className={styles.coverPreview} />
+                  ) : (
+                    <div className={`${styles.coverPlaceholder} ${isUploading ? styles.coverLoading : ''}`}>
+                      {isUploading ? '' : 'No photo yet'}
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    ref={fileInputRef}
+                    onChange={handleCoverUpload}
+                    className={styles.fileInput}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                    className={`${styles.uploadButton} ${isUploading ? styles.loading : ''}`}
+                  >
+                    {coverImageUrl ? 'Change photo' : 'Upload photo'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Details tab */}
+        {activeTab === 'details' && (
+          <div className={styles.fields}>
+            <p className={styles.hint}>Optional but helpful — timing, cuisine, dietary info, and tags make your recipe easier to discover.</p>
+
+            <div className={styles.detailsGrid}>
+              {/* Timing + cuisine/difficulty span full width */}
+              <div className={`${styles.row3} ${styles.detailsGridFull}`}>
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor="g-prep">Prep (min)</label>
+                  <input id="g-prep" type="number" min="1" max={LIMITS.TIMING} {...register('prepTimeMins')} className={styles.input} placeholder="15" />
+                </div>
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor="g-cook">Cook (min)</label>
+                  <input id="g-cook" type="number" min="1" max={LIMITS.TIMING} {...register('cookTimeMins')} className={styles.input} placeholder="30" />
+                </div>
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor="g-serv">Serves</label>
+                  <input id="g-serv" type="number" min="1" max={LIMITS.SERVINGS} {...register('servings')} className={styles.input} placeholder="4" />
+                </div>
+              </div>
+
+              <div className={`${styles.row2} ${styles.detailsGridFull}`}>
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor="g-cuisine">Cuisine</label>
+                  <select id="g-cuisine" {...register('cuisine')} className={styles.select}>
+                    <option value="">Select cuisine…</option>
+                    {CUISINES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor="g-difficulty">Difficulty</label>
+                  <select id="g-difficulty" {...register('difficulty')} className={styles.select}>
+                    <option value="">Select difficulty…</option>
+                    <option value="Easy">Easy</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Advanced">Advanced</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Dietary + Cook style side by side, Tags full width */}
+              <div className={styles.field}>
+                <label className={styles.label} htmlFor="g-dietary">Dietary</label>
+                <MultiSelect
+                  inputId="g-dietary"
+                  options={dietaryOptions}
+                  value={dietaryRestrictions ?? []}
+                  onChange={(v) => setValue('dietaryRestrictions', v, { shouldDirty: true })}
+                  placeholder="e.g. Vegan, Gluten-Free…"
+                />
+              </div>
+
+              <div className={styles.field}>
+                <label className={styles.label} htmlFor="g-cookingMethods">Cook style</label>
+                <CreatableMultiSelect
+                  inputId="g-cookingMethods"
+                  options={cookingMethodOptions}
+                  value={cookingMethods ?? []}
+                  onChange={(v) => setValue('cookingMethods', v, { shouldDirty: true })}
+                  placeholder="e.g. Sautéed, Baked, Grilled…"
+                />
+              </div>
+
+              {tags.length > 0 && (
+                <div className={`${styles.field} ${styles.detailsGridFull}`}>
+                  <label className={styles.label} htmlFor="g-tags">Tags</label>
+                  <MultiSelect
+                    inputId="g-tags"
+                    options={tagOptions}
+                    value={tagIds ?? []}
+                    onChange={(v) => setValue('tagIds', v, { shouldDirty: true })}
+                    placeholder="e.g. Dinner, Weeknight…"
+                  />
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -239,7 +289,10 @@ export function GuidedMode({ form, tags, ingredientTypes }: GuidedModeProps) {
                 <h3 className={styles.previewSection}>Ingredients</h3>
                 <ul className={styles.previewList}>
                   {watchedValues.ingredients.map((ing, i) => (
-                    <li key={i}><strong>{ing.quantity} {ing.unit}</strong> {ing.ingredientName}{ing.preparation ? `, ${ing.preparation}` : ''}</li>
+                    <li key={i}>
+                      <strong>{ing.quantity} {ing.unit}</strong> {ing.ingredientName}
+                      {ing.preparation ? `, ${ing.preparation}` : ''}
+                    </li>
                   ))}
                 </ul>
               </>
@@ -258,15 +311,23 @@ export function GuidedMode({ form, tags, ingredientTypes }: GuidedModeProps) {
         )}
       </div>
 
-      {/* Next / Prev navigation */}
+      {/* Navigation */}
       <div className={styles.navRow}>
         {tabIndex > 0 && (
-          <button type="button" onClick={() => setActiveTab(TABS[tabIndex - 1].id)} className={styles.navBack}>
+          <button
+            type="button"
+            onClick={() => setActiveTab(TABS[tabIndex - 1].id)}
+            className={styles.navBack}
+          >
             ← {TABS[tabIndex - 1].label}
           </button>
         )}
         {tabIndex < TABS.length - 1 && (
-          <button type="button" onClick={() => setActiveTab(TABS[tabIndex + 1].id)} className={styles.navNext}>
+          <button
+            type="button"
+            onClick={() => setActiveTab(TABS[tabIndex + 1].id)}
+            className={styles.navNext}
+          >
             {TABS[tabIndex + 1].label} →
           </button>
         )}

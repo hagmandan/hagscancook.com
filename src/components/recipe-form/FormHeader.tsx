@@ -72,17 +72,17 @@ export function FormHeader({
             type="button"
             onClick={onSaveDraft}
             disabled={isSubmitting}
-            className={styles.draftButton}
+            className={`${styles.draftButton} ${isSubmitting ? styles.loading : ''}`}
           >
-            {isSubmitting ? 'Saving…' : 'Save draft'}
+            Save draft
           </button>
           <button
             type="button"
             onClick={onPublish}
             disabled={isSubmitting}
-            className={styles.publishButton}
+            className={`${styles.publishButton} ${isSubmitting ? styles.loading : ''}`}
           >
-            {isSubmitting ? 'Publishing…' : 'Publish'}
+            Publish
           </button>
         </div>
       </div>

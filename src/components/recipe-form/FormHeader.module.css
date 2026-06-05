@@ -1,6 +1,10 @@
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 .header {
   position: sticky;
-  top: 0;
+  top: 65px; /* height of the header */
   z-index: 40;
   background-color: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
@@ -11,9 +15,9 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  max-width: 72rem;
+  max-width: var(--layout-max);
   margin: 0 auto;
-  padding: 0.75rem 1.5rem;
+  padding: 0.75rem var(--layout-px);
   flex-wrap: wrap;
 }
 
@@ -99,6 +103,30 @@
 }
 
 .draftButton:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* CSS-only loading spinner — appended before the label text */
+.draftButton.loading,
+.publishButton.loading {
+  cursor: not-allowed;
+  padding-left: 2rem;
+  position: relative;
+}
+
+.draftButton.loading::before,
+.publishButton.loading::before {
+  content: '';
+  position: absolute;
+  left: 0.625rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0.75rem;
+  height: 0.75rem;
+  border: 1.5px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  opacity: 0.7;
+}
 
 .publishButton {
   padding: 0.4375rem 0.875rem;

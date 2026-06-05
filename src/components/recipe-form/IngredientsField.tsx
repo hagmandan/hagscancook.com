@@ -27,6 +27,7 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import { useFieldArray, type UseFormReturn } from 'react-hook-form'
 import type { RecipeFormValues } from '@/lib/schemas/recipe'
+import { LIMITS } from '@/lib/schemas/recipe'
 import styles from './IngredientsField.module.css'
 
 interface IngredientsFieldProps {
@@ -71,11 +72,16 @@ export function IngredientsField({ form, ingredientTypes }: IngredientsFieldProp
       {fields.length > 0 && (
         <div className={styles.columnLabels} aria-hidden>
           <span />
-          <span className={styles.label}>Ingredient</span>
-          <span className={styles.label}>Qty</span>
-          <span className={styles.label}>Unit</span>
-          <span className={styles.label}>Prep</span>
-          <span className={styles.label}>Group</span>
+          <span className={styles.label}>
+            Ingredient<span className={styles.requiredMark}>*</span>
+          </span>
+          <span className={styles.label}>
+            Qty<span className={styles.requiredMark}>*</span>
+          </span>
+          <span className={`${styles.label} ${styles.labelOptional}`}>Unit</span>
+          <span className={`${styles.label} ${styles.labelOptional}`}>Prep</span>
+          <span className={`${styles.label} ${styles.labelOptional}`}>Group</span>
+          <span className={`${styles.label} ${styles.labelOptional}`}>Type</span>
           <span />
         </div>
       )}
@@ -169,26 +175,16 @@ function SortableIngredientRow({
           {...register(`ingredients.${index}.ingredientName`)}
           placeholder="e.g. garlic"
           className={`${styles.input} ${styles.nameInput}`}
+          maxLength={LIMITS.INGREDIENT_NAME}
           data-testid={`ingredient-${index}-name`}
         />
-        {ingredientTypes.length > 0 && (
-          <select
-            {...register(`ingredients.${index}.typeId`)}
-            className={styles.typeSelect}
-            aria-label={`Ingredient type for row ${index + 1}`}
-          >
-            <option value="">— type —</option>
-            {ingredientTypes.map((t) => (
-              <option key={t.id} value={t.id}>{t.name}</option>
-            ))}
-          </select>
-        )}
       </div>
 
       <input
         {...register(`ingredients.${index}.quantity`)}
         placeholder="3"
         className={`${styles.input} ${styles.qtyInput}`}
+        maxLength={LIMITS.INGREDIENT_QTY}
         data-testid={`ingredient-${index}-qty`}
       />
 
@@ -196,6 +192,7 @@ function SortableIngredientRow({
         {...register(`ingredients.${index}.unit`)}
         placeholder="cloves"
         className={`${styles.input} ${styles.unitInput}`}
+        maxLength={LIMITS.INGREDIENT_UNIT}
         data-testid={`ingredient-${index}-unit`}
       />
 
@@ -203,6 +200,7 @@ function SortableIngredientRow({
         {...register(`ingredients.${index}.preparation`)}
         placeholder="minced"
         className={`${styles.input} ${styles.prepInput}`}
+        maxLength={LIMITS.INGREDIENT_PREP}
         data-testid={`ingredient-${index}-prep`}
       />
 
@@ -210,8 +208,22 @@ function SortableIngredientRow({
         {...register(`ingredients.${index}.groupLabel`)}
         placeholder="For the sauce"
         className={`${styles.input} ${styles.groupInput}`}
+        maxLength={LIMITS.INGREDIENT_GROUP}
         data-testid={`ingredient-${index}-group`}
       />
+
+      {ingredientTypes.length > 0 ? (
+        <select
+          {...register(`ingredients.${index}.typeId`)}
+          className={styles.typeSelect}
+          aria-label={`Ingredient type for row ${index + 1}`}
+        >
+          <option value="">— type —</option>
+          {ingredientTypes.map((t) => (
+            <option key={t.id} value={t.id}>{t.name}</option>
+          ))}
+        </select>
+      ) : <span />}
 
       <button
         type="button"

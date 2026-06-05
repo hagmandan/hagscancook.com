@@ -14,6 +14,7 @@ env:
     secret: DATABASE_URL
     availability:
       - RUNTIME
+      - BUILD
 
   - variable: DIRECT_URL
     secret: DIRECT_URL
@@ -25,11 +26,13 @@ env:
     secret: FIREBASE_SERVICE_ACCOUNT_KEY
     availability:
       - RUNTIME
+      - BUILD
 
   - variable: NEXT_PUBLIC_SENTRY_DSN
     secret: NEXT_PUBLIC_SENTRY_DSN
     availability:
       - RUNTIME
+      - BUILD
 
   - variable: NEXT_PUBLIC_APP_ENV
     value: production

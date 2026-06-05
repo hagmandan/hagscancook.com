@@ -10,9 +10,9 @@
   display: flex;
   align-items: center;
   gap: 1.5rem;
-  max-width: 72rem;
+  max-width: var(--layout-max);
   margin: 0 auto;
-  padding: 0 1.5rem;
+  padding: 0 var(--layout-px);
   height: 4rem;
 }
 

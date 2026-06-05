@@ -33,20 +33,37 @@ const optionalPositiveInt = z
 // Sub-schemas
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Field limits — shared with HTML maxLength / max attributes in the form UI
+// ---------------------------------------------------------------------------
+
+export const LIMITS = {
+  TITLE: 100,
+  DESCRIPTION: 500,
+  INGREDIENT_NAME: 80,
+  INGREDIENT_QTY: 20,
+  INGREDIENT_UNIT: 30,
+  INGREDIENT_PREP: 60,
+  INGREDIENT_GROUP: 60,
+  STEP_CONTENT: 600,
+  TIMING: 999,
+  SERVINGS: 999,
+} as const
+
 export const IngredientRowSchema = z.object({
   /** Canonical ingredient name (used to find-or-create the Ingredient row). */
-  ingredientName: z.string().min(1, 'Ingredient name is required'),
-  quantity: z.string().min(1, 'Quantity is required'),
-  unit: z.string().optional(),
-  preparation: z.string().optional(),
-  groupLabel: z.string().optional(),
+  ingredientName: z.string().min(1, 'Ingredient name is required').max(LIMITS.INGREDIENT_NAME),
+  quantity: z.string().min(1, 'Quantity is required').max(LIMITS.INGREDIENT_QTY),
+  unit: z.string().max(LIMITS.INGREDIENT_UNIT).optional(),
+  preparation: z.string().max(LIMITS.INGREDIENT_PREP).optional(),
+  groupLabel: z.string().max(LIMITS.INGREDIENT_GROUP).optional(),
   /** Ingredient type UUID. Used when creating a new canonical Ingredient row;
    *  silently ignored for ingredients that already exist in the DB. */
   typeId: z.string().optional(),
 })
 
 export const StepRowSchema = z.object({
-  content: z.string().min(1, 'Step content is required'),
+  content: z.string().min(1, 'Step content is required').max(LIMITS.STEP_CONTENT),
 })
 
 // ---------------------------------------------------------------------------
@@ -54,8 +71,8 @@ export const StepRowSchema = z.object({
 // ---------------------------------------------------------------------------
 
 export const RecipeSchema = z.object({
-  title: z.string().min(1, 'Title is required').max(200),
-  description: z.string().min(1, 'Description is required').max(2000),
+  title: z.string().min(1, 'Title is required').max(LIMITS.TITLE),
+  description: z.string().min(1, 'Description is required').max(LIMITS.DESCRIPTION),
   coverImageUrl: z.string().optional(),
   prepTimeMins: optionalPositiveInt,
   cookTimeMins: optionalPositiveInt,

@@ -51,6 +51,49 @@
   /* Tailwind / legacy aliases */
   --background: var(--color-bg);
   --foreground: var(--color-text);
+
+  /* ── Responsive layout tokens ───────────────────────────────── *
+   * Used by: FormHeader, ChefMode, GuidedMode.                   *
+   * Changing these keeps every form surface in sync.             */
+
+  /* Horizontal edge padding */
+  --layout-px: 1rem;
+  /* Two-column grid sidebar width */
+  --layout-sidebar: 320px;
+  /* Max-width cap for centered containers */
+  --layout-max: 72rem;
+}
+
+/* Tablet (≥ 640 px) ──────────────────────────────────────────── */
+@media (width >= 640px) {
+  :root {
+    --layout-px: 1.5rem;
+  }
+}
+
+/* Standard desktop (≥ 960 px) ───────────────────────────────── */
+@media (width >= 960px) {
+  :root {
+    --layout-px: 2rem;
+  }
+}
+
+/* Widescreen (≥ 1440 px) ────────────────────────────────────── */
+@media (width >= 1440px) {
+  :root {
+    --layout-px: 2.5rem;
+    --layout-sidebar: 360px;
+    --layout-max: 90rem;
+  }
+}
+
+/* 4K / ultra-wide (≥ 1920 px) ───────────────────────────────── */
+@media (width >= 1920px) {
+  :root {
+    --layout-px: 3rem;
+    --layout-sidebar: 400px;
+    --layout-max: 110rem;
+  }
 }
 
 /* ─────────────────────────────────────────────────────────────────

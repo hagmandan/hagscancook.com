@@ -1,15 +1,5 @@
 'use client'
 
-/**
- * Steps drag-and-drop field for the recipe form.
- *
- * Uses dnd-kit for reordering and React Hook Form's `useFieldArray` for
- * array field management. Each step is a textarea with a drag handle and
- * a remove button.
- *
- * @param form - React Hook Form methods passed down from RecipeForm
- */
-
 import {
   DndContext,
   closestCenter,
@@ -26,8 +16,10 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { useFieldArray, type UseFormReturn } from 'react-hook-form'
+import { useFieldArray, useWatch, type UseFormReturn, type Control } from 'react-hook-form'
 import type { RecipeFormValues } from '@/lib/schemas/recipe'
+import { LIMITS } from '@/lib/schemas/recipe'
+import { CharCounter } from '@/components/ui/CharCounter'
 import styles from './StepsField.module.css'
 
 interface StepsFieldProps {
@@ -73,6 +65,7 @@ export function StepsField({ form }: StepsFieldProps) {
               key={field.id}
               id={field.id}
               index={index}
+              control={control}
               register={register}
               error={errors.steps?.[index]?.content?.message}
               onRemove={() => remove(index)}
@@ -99,12 +92,13 @@ export function StepsField({ form }: StepsFieldProps) {
 interface SortableStepProps {
   id: string
   index: number
+  control: Control<RecipeFormValues>
   register: UseFormReturn<RecipeFormValues>['register']
   error?: string
   onRemove: () => void
 }
 
-function SortableStep({ id, index, register, error, onRemove }: SortableStepProps) {
+function SortableStep({ id, index, control, register, error, onRemove }: SortableStepProps) {
   const {
     attributes,
     listeners,
@@ -113,6 +107,8 @@ function SortableStep({ id, index, register, error, onRemove }: SortableStepProp
     transition,
     isDragging,
   } = useSortable({ id })
+
+  const content = useWatch({ control, name: `steps.${index}.content` }) ?? ''
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -140,8 +136,10 @@ function SortableStep({ id, index, register, error, onRemove }: SortableStepProp
           className={styles.textarea}
           placeholder={`Step ${index + 1}…`}
           rows={2}
+          maxLength={LIMITS.STEP_CONTENT}
           data-testid={`step-${index}-content`}
         />
+        <CharCounter value={content} max={LIMITS.STEP_CONTENT} />
         {error && <span className={styles.error}>{error}</span>}
       </div>
 
