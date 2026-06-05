@@ -50,6 +50,7 @@ model User {
 
   recipes     Recipe[]
   favorites   Favorite[]
+  pantryItems PantryItem[]
 
   @@map("users")
 }
@@ -152,6 +153,7 @@ model Ingredient {
 
   type              IngredientType     @relation(fields: [typeId], references: [id])
   recipeIngredients RecipeIngredient[]
+  pantryItems       PantryItem[]
 
   @@map("ingredients")
 }
@@ -229,4 +231,35 @@ model Favorite {
 
   @@id([userId, recipeId])
   @@map("favorites")
+}
+
+// ---------------------------------------------------------------------------
+// Pantry
+// ---------------------------------------------------------------------------
+
+/** A user's personal kitchen inventory entry — what they have on hand.
+ *
+ *  Links to a canonical Ingredient (find-or-create, same as recipes) so the
+ *  pantry can later power "what recipes can I make?" matching via a clean join.
+ *  Stock amount and unit are optional: a pantry can simply list what's present
+ *  without quantities. Unique per (user, ingredient) — one row per ingredient. */
+model PantryItem {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  ingredientId String   @map("ingredient_id")
+  /** Optional free-text stock amount, same convention as RecipeIngredient.quantity. */
+  amount       String?
+  /** Optional unit. Canonical values come from src/lib/constants/units.ts;
+   *  free-text is allowed (the form offers an "Other…" escape hatch). */
+  unit         String?
+  /** Optional free-text note (e.g. "almost out", "in the freezer"). */
+  note         String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user       User       @relation(fields: [userId], references: [id])
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id])
+
+  @@unique([userId, ingredientId])
+  @@map("pantry_items")
 }

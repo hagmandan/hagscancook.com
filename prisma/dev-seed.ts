@@ -180,7 +180,7 @@ async function upsertE2ERecipe() {
         recipeId: recipe.id,
         ingredientId: ingredientByName.get('cherry tomatoes')!,
         quantity: '2',
-        unit: 'cups',
+        unit: 'cup',
         preparation: 'halved',
         groupLabel: null,
         display: null,
@@ -224,12 +224,52 @@ async function upsertE2ERecipe() {
   return recipe
 }
 
+async function upsertE2EPantry() {
+  const user = await prisma.user.findUniqueOrThrow({
+    where: { firebaseUid: E2E_USER.firebaseUid },
+    select: { id: true },
+  })
+
+  // Link to canonical ingredients already seeded in INGREDIENTS.
+  const pantry = [
+    { name: 'olive oil', amount: '1', unit: 'l', note: null },
+    { name: 'spaghetti', amount: null, unit: null, note: 'almost out' },
+    { name: 'parmesan', amount: '200', unit: 'g', note: null },
+  ]
+
+  const ingredientRows = await prisma.ingredient.findMany({
+    where: { name: { in: pantry.map((p) => p.name) } },
+    select: { id: true, name: true },
+  })
+  const idByName = new Map(ingredientRows.map((i) => [i.name, i.id]))
+
+  for (const item of pantry) {
+    const ingredientId = idByName.get(item.name)
+    if (!ingredientId) continue
+    await prisma.pantryItem.upsert({
+      where: { userId_ingredientId: { userId: user.id, ingredientId } },
+      update: { amount: item.amount, unit: item.unit, note: item.note },
+      create: {
+        userId: user.id,
+        ingredientId,
+        amount: item.amount,
+        unit: item.unit,
+        note: item.note,
+      },
+    })
+  }
+
+  return pantry.length
+}
+
 async function main() {
   console.log('🌱 Seeding development fixtures…')
   await upsertLookups()
   const recipe = await upsertE2ERecipe()
+  const pantryCount = await upsertE2EPantry()
   console.log(`  ✓ recipe: /recipes/${recipe.slug}`)
   console.log(`  ✓ user: ${E2E_USER.email}`)
+  console.log(`  ✓ pantry: ${pantryCount} items`)
   console.log('✅ Development seed complete.')
 }
 

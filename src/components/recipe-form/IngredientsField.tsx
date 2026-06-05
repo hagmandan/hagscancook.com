@@ -25,9 +25,10 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { useFieldArray, type UseFormReturn } from 'react-hook-form'
+import { useFieldArray, useWatch, type UseFormReturn } from 'react-hook-form'
 import type { RecipeFormValues } from '@/lib/schemas/recipe'
 import { LIMITS } from '@/lib/schemas/recipe'
+import { UnitSelect } from '@/components/ui/UnitSelect'
 import styles from './IngredientsField.module.css'
 
 interface IngredientsFieldProps {
@@ -45,7 +46,7 @@ const DEFAULT_INGREDIENT = {
 }
 
 export function IngredientsField({ form, ingredientTypes }: IngredientsFieldProps) {
-  const { control, register, formState: { errors } } = form
+  const { control, register, setValue, formState: { errors } } = form
 
   const { fields, append, remove, move } = useFieldArray({
     control,
@@ -100,7 +101,9 @@ export function IngredientsField({ form, ingredientTypes }: IngredientsFieldProp
               key={field.id}
               id={field.id}
               index={index}
+              control={control}
               register={register}
+              setValue={setValue}
               errors={errors}
               onRemove={() => remove(index)}
               ingredientTypes={ingredientTypes}
@@ -127,7 +130,9 @@ export function IngredientsField({ form, ingredientTypes }: IngredientsFieldProp
 interface SortableIngredientRowProps {
   id: string
   index: number
+  control: UseFormReturn<RecipeFormValues>['control']
   register: UseFormReturn<RecipeFormValues>['register']
+  setValue: UseFormReturn<RecipeFormValues>['setValue']
   errors: UseFormReturn<RecipeFormValues>['formState']['errors']
   onRemove: () => void
   ingredientTypes: { id: string; name: string }[]
@@ -136,7 +141,9 @@ interface SortableIngredientRowProps {
 function SortableIngredientRow({
   id,
   index,
+  control,
   register,
+  setValue,
   errors,
   onRemove,
   ingredientTypes,
@@ -188,13 +195,7 @@ function SortableIngredientRow({
         data-testid={`ingredient-${index}-qty`}
       />
 
-      <input
-        {...register(`ingredients.${index}.unit`)}
-        placeholder="cloves"
-        className={`${styles.input} ${styles.unitInput}`}
-        maxLength={LIMITS.INGREDIENT_UNIT}
-        data-testid={`ingredient-${index}-unit`}
-      />
+      <UnitCell index={index} control={control} setValue={setValue} />
 
       <input
         {...register(`ingredients.${index}.preparation`)}
@@ -246,5 +247,30 @@ function SortableIngredientRow({
         </div>
       )}
     </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Unit cell — wires the shared UnitSelect to the RHF field
+// ---------------------------------------------------------------------------
+
+interface UnitCellProps {
+  index: number
+  control: UseFormReturn<RecipeFormValues>['control']
+  setValue: UseFormReturn<RecipeFormValues>['setValue']
+}
+
+function UnitCell({ index, control, setValue }: UnitCellProps) {
+  const name = `ingredients.${index}.unit` as const
+  const value = useWatch({ control, name })
+
+  return (
+    <UnitSelect
+      value={value ?? ''}
+      onChange={(v) => setValue(name, v, { shouldDirty: true })}
+      ariaLabel={`Unit for ingredient ${index + 1}`}
+      maxLength={LIMITS.INGREDIENT_UNIT}
+      data-testid={`ingredient-${index}-unit`}
+    />
   )
 }
