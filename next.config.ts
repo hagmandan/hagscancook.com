@@ -17,7 +17,7 @@ const nextConfig: NextConfig = {
 
 export default withSentryConfig(nextConfig, {
   org: 'dan-hagman',
-  project: 'javascript-nextjs',
+  project: 'hagscancook-com',
 
   // Auth token for source map uploads — set SENTRY_AUTH_TOKEN as an
   // App Hosting secret so production stack traces are readable.

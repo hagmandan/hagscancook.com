@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { type UseFormReturn } from 'react-hook-form'
 import { useCoverUpload } from './useCoverUpload'
+import { useTitleAvailability } from '@/lib/hooks/useTitleAvailability'
 import type { RecipeFormValues } from '@/lib/schemas/recipe'
 import { LIMITS } from '@/lib/schemas/recipe'
 import { CharCounter } from '@/components/ui/CharCounter'
@@ -28,12 +29,13 @@ interface GuidedModeProps {
   form: UseFormReturn<RecipeFormValues>
   tags: { id: string; name: string }[]
   ingredientTypes: { id: string; name: string }[]
+  recipeId?: string
 }
 
 const dietaryOptions = DIETARY_RESTRICTIONS.map((d) => ({ label: d, value: d }))
 const cookingMethodOptions = COOKING_METHODS.map((m) => ({ label: m, value: m }))
 
-export function GuidedMode({ form, tags, ingredientTypes }: GuidedModeProps) {
+export function GuidedMode({ form, tags, ingredientTypes, recipeId }: GuidedModeProps) {
   const [activeTab, setActiveTab] = useState<Tab>('about')
   const { register, watch, setValue, formState: { errors } } = form
   const { isUploading, fileInputRef, handleCoverUpload } = useCoverUpload(setValue)
@@ -43,6 +45,7 @@ export function GuidedMode({ form, tags, ingredientTypes }: GuidedModeProps) {
   const dietaryRestrictions = watch('dietaryRestrictions')
   const tagIds = watch('tagIds')
   const watchedValues = watch()
+  const { taken: titleTaken } = useTitleAvailability(watchedValues.title, recipeId)
 
   const tagOptions = tags.map((t) => ({ label: t.name, value: t.id }))
 
@@ -106,6 +109,7 @@ export function GuidedMode({ form, tags, ingredientTypes }: GuidedModeProps) {
                   />
                   <CharCounter value={watchedValues.title} max={LIMITS.TITLE} />
                   {errors.title && <span className={styles.error}>{errors.title.message}</span>}
+                  {titleTaken && <span className={styles.warning}>Another recipe with this title exists — yours will get a slightly different URL.</span>}
                 </div>
 
                 <div className={styles.field}>

@@ -17,6 +17,7 @@ import { useForm, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { RecipeSchema, type RecipeFormValues } from '@/lib/schemas/recipe'
 import { createRecipe, updateRecipe } from '@/lib/actions/recipes'
+import { useToast } from '@/lib/toast'
 import { FormHeader } from './FormHeader'
 import { ChefMode } from './ChefMode'
 import { GuidedMode } from './GuidedMode'
@@ -52,6 +53,7 @@ const DEFAULT_VALUES: RecipeFormValues = {
 export function RecipeForm({ initialValues, recipeId, tags, ingredientTypes }: RecipeFormProps) {
   const searchParams = useSearchParams()
   const router = useRouter()
+  const toast = useToast()
   const mode = searchParams.get('mode') ?? 'chef'
 
   const form = useForm<RecipeFormValues>({
@@ -71,8 +73,7 @@ export function RecipeForm({ initialValues, recipeId, tags, ingredientTypes }: R
       : await createRecipe(data, publish)
 
     if ('error' in result) {
-      // TODO: surface error via a toast/banner in a future iteration
-      alert(result.error)
+      toast.error('Error', result.error)
       return
     }
 
@@ -97,9 +98,9 @@ export function RecipeForm({ initialValues, recipeId, tags, ingredientTypes }: R
       />
 
       {mode === 'guided' ? (
-        <GuidedMode form={form} tags={tags} ingredientTypes={ingredientTypes} />
+        <GuidedMode form={form} tags={tags} ingredientTypes={ingredientTypes} recipeId={recipeId} />
       ) : (
-        <ChefMode form={form} tags={tags} ingredientTypes={ingredientTypes} />
+        <ChefMode form={form} tags={tags} ingredientTypes={ingredientTypes} recipeId={recipeId} />
       )}
     </div>
   )

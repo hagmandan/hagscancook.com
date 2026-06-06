@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { type UseFormReturn } from 'react-hook-form'
 import { useCoverUpload } from './useCoverUpload'
+import { useTitleAvailability } from '@/lib/hooks/useTitleAvailability'
 import type { RecipeFormValues } from '@/lib/schemas/recipe'
 import { LIMITS } from '@/lib/schemas/recipe'
 import { CharCounter } from '@/components/ui/CharCounter'
@@ -18,17 +19,19 @@ interface ChefModeProps {
   form: UseFormReturn<RecipeFormValues>
   tags: { id: string; name: string }[]
   ingredientTypes: { id: string; name: string }[]
+  recipeId?: string
 }
 
 const dietaryOptions = DIETARY_RESTRICTIONS.map((d) => ({ label: d, value: d }))
 const cookingMethodOptions = COOKING_METHODS.map((m) => ({ label: m, value: m }))
 
-export function ChefMode({ form, tags, ingredientTypes }: ChefModeProps) {
+export function ChefMode({ form, tags, ingredientTypes, recipeId }: ChefModeProps) {
   const { register, watch, setValue, formState: { errors } } = form
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { isUploading, fileInputRef, handleCoverUpload } = useCoverUpload(setValue)
 
   const title = watch('title')
+  const { taken: titleTaken } = useTitleAvailability(title, recipeId)
   const description = watch('description')
   const coverImageUrl = watch('coverImageUrl')
   const cookingMethods = watch('cookingMethods')
@@ -59,6 +62,7 @@ export function ChefMode({ form, tags, ingredientTypes }: ChefModeProps) {
             />
             <CharCounter value={title} max={LIMITS.TITLE} />
             {errors.title && <span className={styles.error}>{errors.title.message}</span>}
+            {titleTaken && <span className={styles.warning}>Another recipe with this title exists — yours will get a slightly different URL.</span>}
           </div>
 
           <div className={styles.field}>

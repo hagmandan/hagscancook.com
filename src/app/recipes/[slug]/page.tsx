@@ -111,73 +111,89 @@ export default async function RecipePage({ params }: RecipePageProps) {
             alt={recipe.title}
             fill
             priority
-            sizes="100vw"
+            sizes="(min-width: 960px) min(var(--layout-max), 100vw), 100vw"
             className={styles.coverImage}
           />
         </div>
       )}
 
       <div className={styles.content}>
-        {/* Header */}
-        <header className={styles.header}>
-          <div className={styles.meta}>
-            {recipe.cuisine && (
-              <span className={styles.cuisine}>{recipe.cuisine}</span>
-            )}
-            {recipe.difficulty && (
-              <span className={styles.difficulty}>{recipe.difficulty}</span>
-            )}
-            {recipe.tags.map(({ tag }) => (
-              <span key={tag.id} className={styles.tag}>
-                {tag.name}
-              </span>
-            ))}
-          </div>
-
-          <h1 className={styles.title}>{recipe.title}</h1>
-          <p className={styles.description}>{recipe.description}</p>
-
-          <div className={styles.stats}>
-            {recipe.prepTimeMins && (
-              <div className={styles.stat}>
-                <span className={styles.statLabel}>Prep</span>
-                <span className={styles.statValue}>{recipe.prepTimeMins} min</span>
-              </div>
-            )}
-            {recipe.cookTimeMins && (
-              <div className={styles.stat}>
-                <span className={styles.statLabel}>Cook</span>
-                <span className={styles.statValue}>{recipe.cookTimeMins} min</span>
-              </div>
-            )}
-            {totalMins && (
-              <div className={styles.stat}>
-                <span className={styles.statLabel}>Total</span>
-                <span className={styles.statValue}>{totalMins} min</span>
-              </div>
-            )}
-            {recipe.servings && (
-              <div className={styles.stat}>
-                <span className={styles.statLabel}>Serves</span>
-                <span className={styles.statValue}>{recipe.servings}</span>
-              </div>
-            )}
-          </div>
-
-          <div className={styles.authorRow}>
-            <div className={styles.author}>
-              <span>Recipe by</span>
-              <strong>{recipe.author.displayName}</strong>
+        <aside className={styles.sidebar}>
+          <header className={styles.header}>
+            <div className={styles.meta}>
+              {recipe.cuisine && (
+                <span className={styles.cuisine}>{recipe.cuisine}</span>
+              )}
+              {recipe.difficulty && (
+                <span className={styles.difficulty}>{recipe.difficulty}</span>
+              )}
+              {recipe.tags.map(({ tag }) => (
+                <span key={tag.id} className={styles.tag}>
+                  {tag.name}
+                </span>
+              ))}
             </div>
-            {session && (
-              <FavoriteButton
-                recipeId={recipe.id}
-                recipeSlug={recipe.slug}
-                initialFavorited={isFavorited}
-              />
-            )}
-          </div>
-        </header>
+
+            <h1 className={styles.title}>{recipe.title}</h1>
+            <p className={styles.description}>{recipe.description}</p>
+
+            <div className={styles.stats}>
+              {recipe.prepTimeMins && (
+                <div className={styles.stat}>
+                  <span className={styles.statLabel}>Prep</span>
+                  <span className={styles.statValue}>{recipe.prepTimeMins} min</span>
+                </div>
+              )}
+              {recipe.cookTimeMins && (
+                <div className={styles.stat}>
+                  <span className={styles.statLabel}>Cook</span>
+                  <span className={styles.statValue}>{recipe.cookTimeMins} min</span>
+                </div>
+              )}
+              {totalMins && (
+                <div className={styles.stat}>
+                  <span className={styles.statLabel}>Total</span>
+                  <span className={styles.statValue}>{totalMins} min</span>
+                </div>
+              )}
+              {recipe.servings && (
+                <div className={styles.stat}>
+                  <span className={styles.statLabel}>Serves</span>
+                  <span className={styles.statValue}>{recipe.servings}</span>
+                </div>
+              )}
+            </div>
+
+            <div className={styles.authorRow}>
+              <div className={styles.author}>
+                <span>Recipe by</span>
+                <strong>{recipe.author.displayName}</strong>
+              </div>
+              <div className={styles.actions}>
+                {session?.userId === recipe.authorId && (
+                  <Link href={`/recipes/${slug}/edit`} className={styles.editButton}>Edit</Link>
+                )}
+                {session && (
+                  <FavoriteButton
+                    recipeId={recipe.id}
+                    recipeSlug={recipe.slug}
+                    initialFavorited={isFavorited}
+                  />
+                )}
+              </div>
+            </div>
+          </header>
+
+          {recipe.dietaryRestrictions.length > 0 && (
+            <footer className={styles.dietary}>
+              {recipe.dietaryRestrictions.map((d) => (
+                <span key={d} className={styles.dietaryTag}>
+                  {d}
+                </span>
+              ))}
+            </footer>
+          )}
+        </aside>
 
         <div className={styles.body}>
           {/* Ingredients — always visible */}
@@ -218,17 +234,6 @@ export default async function RecipePage({ params }: RecipePageProps) {
             />
           </section>
         </div>
-
-        {/* Dietary restrictions */}
-        {recipe.dietaryRestrictions.length > 0 && (
-          <footer className={styles.dietary}>
-            {recipe.dietaryRestrictions.map((d) => (
-              <span key={d} className={styles.dietaryTag}>
-                {d}
-              </span>
-            ))}
-          </footer>
-        )}
       </div>
     </article>
     </>
