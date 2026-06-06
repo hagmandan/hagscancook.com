@@ -67,7 +67,8 @@ describe('ToastProvider queue logic', () => {
     const btn = screen.getByRole('button', { name: 'add' })
     act(() => { btn.click() })
 
-    expect(screen.getByText('Error: Oops')).toBeInTheDocument()
+    // Text appears in both the SR live region and the visible card
+    expect(screen.getAllByText('Error: Oops').length).toBeGreaterThan(0)
   })
 
   it('auto-removes an error toast after 6000ms', async () => {
@@ -86,11 +87,11 @@ describe('ToastProvider queue logic', () => {
     )
 
     act(() => { screen.getByRole('button', { name: 'add' }).click() })
-    expect(screen.getByText('Error: Oops')).toBeInTheDocument()
+    expect(screen.getAllByText('Error: Oops').length).toBeGreaterThan(0)
 
     act(() => { vi.advanceTimersByTime(6000) })
     await waitFor(() => {
-      expect(screen.queryByText('Error: Oops')).not.toBeInTheDocument()
+      expect(screen.queryAllByText('Error: Oops')).toHaveLength(0)
     })
   })
 
@@ -110,11 +111,11 @@ describe('ToastProvider queue logic', () => {
     )
 
     act(() => { screen.getByRole('button', { name: 'add' }).click() })
-    expect(screen.getByText('Done: Worked')).toBeInTheDocument()
+    expect(screen.getAllByText('Done: Worked').length).toBeGreaterThan(0)
 
     act(() => { vi.advanceTimersByTime(4000) })
     await waitFor(() => {
-      expect(screen.queryByText('Done: Worked')).not.toBeInTheDocument()
+      expect(screen.queryAllByText('Done: Worked')).toHaveLength(0)
     })
   })
 
@@ -145,7 +146,7 @@ describe('ToastProvider queue logic', () => {
       act(() => { screen.getByRole('button', { name: `add ${n}` }).click() })
     }
 
-    expect(screen.queryByText('Error: Toast 1')).not.toBeInTheDocument()
-    expect(screen.getByText('Error: Toast 5')).toBeInTheDocument()
+    expect(screen.queryAllByText('Error: Toast 1')).toHaveLength(0)
+    expect(screen.getAllByText('Error: Toast 5').length).toBeGreaterThan(0)
   })
 })

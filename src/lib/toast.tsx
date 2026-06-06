@@ -4,6 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useRef,
   useState,
   type ReactNode,
@@ -43,13 +44,25 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       const id = crypto.randomUUID()
       setToasts((prev) => {
         const next = [...prev, { ...item, id }]
-        return next.length > MAX_VISIBLE ? next.slice(-MAX_VISIBLE) : next
+        if (next.length > MAX_VISIBLE) {
+          const ejected = next.slice(0, next.length - MAX_VISIBLE)
+          ejected.forEach((t) => {
+            clearTimeout(timers.current.get(t.id))
+            timers.current.delete(t.id)
+          })
+          return next.slice(-MAX_VISIBLE)
+        }
+        return next
       })
       const timer = setTimeout(() => removeToast(id), AUTO_DISMISS_MS[item.type])
       timers.current.set(id, timer)
     },
     [removeToast]
   )
+
+  useEffect(() => {
+    return () => timers.current.forEach((t) => clearTimeout(t))
+  }, [])
 
   return (
     <ToastContext.Provider value={{ toasts, addToast, removeToast }}>
@@ -69,32 +82,36 @@ export function useToast() {
   }
 }
 
+const SR_ONLY: React.CSSProperties = {
+  position: 'absolute',
+  width: 1,
+  height: 1,
+  padding: 0,
+  margin: -1,
+  overflow: 'hidden',
+  clip: 'rect(0,0,0,0)',
+  whiteSpace: 'nowrap',
+  border: 0,
+}
+
 export function ToastContainer() {
   const ctx = useContext(ToastContext)
+  // ToastContainer may be rendered outside ToastProvider in tests — fail gracefully
   if (!ctx) return null
   const { toasts, removeToast } = ctx
 
+  const latestError = toasts.filter((t) => t.type === 'error').at(-1)
+  const latestSuccess = toasts.filter((t) => t.type === 'success').at(-1)
+
   return (
     <>
-      {/*
-       * Error toasts: assertive live region for immediate SR announcement.
-       * Success toasts: polite live region to avoid interrupting SR.
-       * The visible stack below is aria-hidden; these regions are the a11y surface.
-       */}
-      <div
-        role="alert"
-        aria-live="assertive"
-        aria-atomic="true"
-        aria-label={toasts.filter((t) => t.type === 'error').at(-1)?.message}
-        style={{ display: 'none' }}
-      />
-      <div
-        role="status"
-        aria-live="polite"
-        aria-atomic="true"
-        aria-label={toasts.filter((t) => t.type === 'success').at(-1)?.message}
-        style={{ display: 'none' }}
-      />
+      {/* Visually hidden live regions — text content triggers SR announcements */}
+      <div aria-live="assertive" aria-atomic="true" style={SR_ONLY}>
+        {latestError && `${latestError.title}: ${latestError.message}`}
+      </div>
+      <div aria-live="polite" aria-atomic="true" style={SR_ONLY}>
+        {latestSuccess && `${latestSuccess.title}: ${latestSuccess.message}`}
+      </div>
 
       {/* Visible toast stack */}
       <div
