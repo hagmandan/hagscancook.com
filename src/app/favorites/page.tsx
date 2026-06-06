@@ -13,7 +13,10 @@ import styles from './favorites.module.css'
 
 async function getFavorites(userId: string) {
   return db.favorite.findMany({
-    where: { userId },
+    where: {
+      userId,
+      recipe: { status: 'published', deletedAt: null },
+    },
     orderBy: { createdAt: 'desc' },
     include: {
       recipe: {
@@ -27,8 +30,6 @@ async function getFavorites(userId: string) {
           cookTimeMins: true,
           servings: true,
           cuisine: true,
-          deletedAt: true,
-          status: true,
           author: { select: { displayName: true } },
         },
       },
@@ -42,16 +43,11 @@ export default async function FavoritesPage() {
   const session = await requireSession()
   const favorites = await getFavorites(session.userId)
 
-  // Filter out soft-deleted or unpublished recipes
-  const visible = favorites.filter(
-    (f) => f.recipe.status === 'published' && !f.recipe.deletedAt
-  )
-
   return (
     <div className={styles.page}>
       <h1 className={styles.title}>Favorites</h1>
 
-      {visible.length === 0 ? (
+      {favorites.length === 0 ? (
         <div className={styles.empty}>
           <p>No saved recipes yet.</p>
           <Link href="/recipes" className={styles.emptyLink}>
@@ -61,10 +57,10 @@ export default async function FavoritesPage() {
       ) : (
         <>
           <p className={styles.count}>
-            {visible.length} saved recipe{visible.length !== 1 ? 's' : ''}
+            {favorites.length} saved recipe{favorites.length !== 1 ? 's' : ''}
           </p>
           <ul className={styles.grid} role="list">
-            {visible.map(({ recipe }) => (
+            {favorites.map(({ recipe }) => (
               <li key={recipe.id}>
                 <RecipeCard recipe={recipe} />
               </li>

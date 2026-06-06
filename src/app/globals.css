@@ -150,3 +150,7 @@ body {
   color: var(--color-text);
   font-family: var(--font-geist, system-ui, sans-serif);
 }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

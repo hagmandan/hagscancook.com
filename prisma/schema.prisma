@@ -102,6 +102,7 @@ model Recipe {
   tags                RecipeTag[]
   favorites           Favorite[]
 
+  @@index([authorId])
   @@map("recipes")
 }
 
@@ -123,6 +124,7 @@ model Step {
 
   recipe   Recipe  @relation(fields: [recipeId], references: [id], onDelete: Cascade)
 
+  @@index([recipeId])
   @@map("steps")
 }
 
@@ -155,6 +157,7 @@ model Ingredient {
   recipeIngredients RecipeIngredient[]
   pantryItems       PantryItem[]
 
+  @@index([typeId])
   @@map("ingredients")
 }
 
@@ -185,6 +188,7 @@ model RecipeIngredient {
   recipe     Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
   ingredient Ingredient @relation(fields: [ingredientId], references: [id])
 
+  @@index([recipeId])
   @@map("recipe_ingredients")
 }
 
@@ -210,9 +214,10 @@ model RecipeTag {
   tagId    String @map("tag_id")
 
   recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
-  tag    Tag    @relation(fields: [tagId], references: [id])
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
   @@id([recipeId, tagId])
+  @@index([tagId])
   @@map("recipe_tags")
 }
 

@@ -10,6 +10,7 @@
 import { revalidatePath } from 'next/cache'
 import { db } from '@/lib/db'
 import { requireSession } from '@/lib/auth'
+import { captureException } from '@/lib/monitoring/errors'
 
 /**
  * Adds or removes a recipe from the current user's favorites.
@@ -27,24 +28,29 @@ export async function toggleFavorite(
 ): Promise<{ favorited: boolean } | { error: string }> {
   const session = await requireSession()
 
-  const existing = await db.favorite.findUnique({
-    where: { userId_recipeId: { userId: session.userId, recipeId } },
-    select: { userId: true },
-  })
-
-  if (existing) {
-    await db.favorite.delete({
+  try {
+    const existing = await db.favorite.findUnique({
       where: { userId_recipeId: { userId: session.userId, recipeId } },
+      select: { userId: true },
+    })
+
+    if (existing) {
+      await db.favorite.delete({
+        where: { userId_recipeId: { userId: session.userId, recipeId } },
+      })
+      revalidatePath(`/recipes/${recipeSlug}`)
+      revalidatePath('/favorites')
+      return { favorited: false }
+    }
+
+    await db.favorite.create({
+      data: { userId: session.userId, recipeId },
     })
     revalidatePath(`/recipes/${recipeSlug}`)
     revalidatePath('/favorites')
-    return { favorited: false }
+    return { favorited: true }
+  } catch (err) {
+    captureException(err, { feature: 'favorites', operation: 'toggle', runtime: 'server' })
+    return { error: 'Failed to update favorite. Please try again.' }
   }
-
-  await db.favorite.create({
-    data: { userId: session.userId, recipeId },
-  })
-  revalidatePath(`/recipes/${recipeSlug}`)
-  revalidatePath('/favorites')
-  return { favorited: true }
 }

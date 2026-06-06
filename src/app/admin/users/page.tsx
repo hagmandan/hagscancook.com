@@ -12,6 +12,7 @@ import styles from '../admin.module.css'
 async function getAllUsers() {
   return db.user.findMany({
     orderBy: { createdAt: 'asc' },
+    take: 500,
     select: {
       id: true,
       displayName: true,
@@ -22,6 +23,8 @@ async function getAllUsers() {
     },
   })
 }
+
+export const metadata = { title: 'Admin — Users' }
 
 export default async function AdminUsersPage() {
   const session = await requireAdmin()

@@ -30,6 +30,8 @@ async function getData() {
   return { types, ingredients }
 }
 
+export const metadata = { title: 'Admin — Ingredients' }
+
 export default async function AdminIngredientsPage() {
   await requireAdmin()
   const { types, ingredients } = await getData()

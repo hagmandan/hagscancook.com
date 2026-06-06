@@ -15,6 +15,7 @@ async function getAllRecipes() {
   return db.recipe.findMany({
     where: { deletedAt: null },
     orderBy: { createdAt: 'desc' },
+    take: 500,
     select: {
       id: true,
       slug: true,
@@ -27,6 +28,8 @@ async function getAllRecipes() {
     },
   })
 }
+
+export const metadata = { title: 'Admin — Recipes' }
 
 export default async function AdminRecipesPage() {
   await requireAdmin()

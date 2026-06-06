@@ -11,6 +11,7 @@ import { z } from 'zod'
 import { db } from '@/lib/db'
 import { requireAdmin } from '@/lib/auth'
 import { toSlug } from '@/lib/utils/slugify'
+import { captureException } from '@/lib/monitoring/errors'
 import type { Role } from '@prisma/client'
 
 // ---------------------------------------------------------------------------
@@ -112,21 +113,19 @@ export async function createTag(
   const slug = toSlug(parsed.data.name)
   try {
     await db.tag.create({ data: { name: parsed.data.name, slug } })
-  } catch {
+  } catch (err) {
+    captureException(err, { feature: 'admin', operation: 'create-tag', runtime: 'server' })
     return { error: 'A tag with that name already exists' }
   }
   revalidatePath('/admin/tags')
   return { ok: true }
 }
 
-/** Deletes a tag and removes all recipe_tag associations. */
+/** Deletes a tag. RecipeTag rows cascade-delete via onDelete: Cascade. */
 export async function deleteTag(
   tagId: string
 ): Promise<{ ok: true } | { error: string }> {
   await requireAdmin()
-  // RecipeTag rows cascade-delete via DB FK, but Prisma schema doesn't have
-  // onDelete: Cascade on Tag → RecipeTag, so we delete manually.
-  await db.recipeTag.deleteMany({ where: { tagId } })
   await db.tag.delete({ where: { id: tagId } })
   revalidatePath('/admin/tags')
   return { ok: true }
@@ -151,7 +150,8 @@ export async function createIngredientType(
   const slug = toSlug(parsed.data.name)
   try {
     await db.ingredientType.create({ data: { name: parsed.data.name, slug } })
-  } catch {
+  } catch (err) {
+    captureException(err, { feature: 'admin', operation: 'create-ingredient-type', runtime: 'server' })
     return { error: 'An ingredient type with that name already exists' }
   }
   revalidatePath('/admin/ingredients')
@@ -185,7 +185,8 @@ export async function createIngredient(
         typeId: parsed.data.typeId,
       },
     })
-  } catch {
+  } catch (err) {
+    captureException(err, { feature: 'admin', operation: 'create-ingredient', runtime: 'server' })
     return { error: 'An ingredient with that name already exists' }
   }
   revalidatePath('/admin/ingredients')

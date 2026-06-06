@@ -81,13 +81,6 @@
 
 .input::placeholder { color: var(--color-border); }
 
-/* Column-specific widths are controlled by the grid — no overrides needed */
-.nameInput {}
-.qtyInput {}
-.unitInput {}
-.prepInput {}
-.groupInput {}
-
 /* Ingredient name cell: just the name input */
 .nameCell {
   min-width: 0;

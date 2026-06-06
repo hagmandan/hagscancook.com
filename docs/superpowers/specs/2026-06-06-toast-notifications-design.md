@@ -1,6 +1,6 @@
 # Toast Notification System — Design Spec
 
-**Date:** 2026-06-06  
+**Date:** 2026-06-06
 **Status:** Approved
 
 ## Problem
@@ -16,15 +16,15 @@ Users have no way to know when an action fails. A lightweight app-level toast se
 
 ## Decisions
 
-| Question | Decision |
-|---|---|
-| Position | Bottom-right, stacks upward |
-| Types | `error` + `success` (no info/warning for now) |
-| Visual style | Card with left accent border, white background |
-| Animation | Slide up from bottom on enter (0.25s ease), slide down on exit |
-| Reduced motion | Fade only (no translate) |
-| Implementation | Custom context — no new dependencies |
-| Inline errors | `ProfileForm` and `PantryManager` keep existing inline feedback |
+| Question       | Decision                                                        |
+| -------------- | --------------------------------------------------------------- |
+| Position       | Bottom-right, stacks upward                                     |
+| Types          | `error` + `success` (no info/warning for now)                   |
+| Visual style   | Card with left accent border, white background                  |
+| Animation      | Slide up from bottom on enter (0.25s ease), slide down on exit  |
+| Reduced motion | Fade only (no translate)                                        |
+| Implementation | Custom context — no new dependencies                            |
+| Inline errors  | `ProfileForm` and `PantryManager` keep existing inline feedback |
 
 ---
 
@@ -87,7 +87,7 @@ Keyframes (slide by default, fade override for reduced-motion users):
 
 ### Modified files
 
-**`src/app/layout.tsx`**  
+**`src/app/layout.tsx`**
 Add `<ToastContainer>` inside `<Providers>`, after `<Footer>`:
 ```tsx
 <Providers>
@@ -98,17 +98,17 @@ Add `<ToastContainer>` inside `<Providers>`, after `<Footer>`:
 </Providers>
 ```
 
-**`src/components/recipe/FavoriteButton.tsx`**  
+**`src/components/recipe/FavoriteButton.tsx`**
 Add `useToast()`. On `'error' in result`: call `toast.error('Error', 'Could not update favorite')`.
 
-**`src/app/admin/AdminRecipeActions.tsx`**  
+**`src/app/admin/AdminRecipeActions.tsx`**
 Add `useToast()`. Check action results:
 - `unpublishRecipe` failure → `toast.error('Error', 'Could not unpublish recipe')`
 - `unpublishRecipe` success → `toast.success('Done', 'Recipe unpublished')`
 - `adminDeleteRecipe` failure → `toast.error('Error', 'Could not delete recipe')`
 - `adminDeleteRecipe` success → `toast.success('Done', 'Recipe deleted')`
 
-**`src/app/my-recipes/RecipeRowActions.tsx`**  
+**`src/app/my-recipes/RecipeRowActions.tsx`**
 Add `useToast()`. Check `deleteRecipe` result; on failure: `toast.error('Error', 'Could not delete recipe')`.
 
 ### Unchanged

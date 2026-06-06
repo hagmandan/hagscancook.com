@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useRef, type ChangeEvent } from 'react'
+import { useState } from 'react'
 import { type UseFormReturn } from 'react-hook-form'
+import { useCoverUpload } from './useCoverUpload'
 import type { RecipeFormValues } from '@/lib/schemas/recipe'
 import { LIMITS } from '@/lib/schemas/recipe'
 import { CharCounter } from '@/components/ui/CharCounter'
@@ -34,9 +35,8 @@ const cookingMethodOptions = COOKING_METHODS.map((m) => ({ label: m, value: m })
 
 export function GuidedMode({ form, tags, ingredientTypes }: GuidedModeProps) {
   const [activeTab, setActiveTab] = useState<Tab>('about')
-  const [isUploading, setIsUploading] = useState(false)
   const { register, watch, setValue, formState: { errors } } = form
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const { isUploading, fileInputRef, handleCoverUpload } = useCoverUpload(setValue)
 
   const coverImageUrl = watch('coverImageUrl')
   const cookingMethods = watch('cookingMethods')
@@ -51,25 +51,6 @@ export function GuidedMode({ form, tags, ingredientTypes }: GuidedModeProps) {
 
   const totalMins =
     (parseInt(watchedValues.prepTimeMins) || 0) + (parseInt(watchedValues.cookTimeMins) || 0) || null
-
-  async function handleCoverUpload(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setIsUploading(true)
-    try {
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filename: file.name, contentType: file.type }),
-      })
-      if (!res.ok) return
-      const { uploadUrl, publicUrl } = (await res.json()) as { uploadUrl: string; publicUrl: string }
-      await fetch(uploadUrl, { method: 'PUT', body: file, headers: { 'Content-Type': file.type } })
-      setValue('coverImageUrl', publicUrl, { shouldDirty: true })
-    } finally {
-      setIsUploading(false)
-    }
-  }
 
   return (
     <div className={styles.wrapper}>

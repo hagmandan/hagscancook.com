@@ -18,6 +18,8 @@ async function getTags() {
   })
 }
 
+export const metadata = { title: 'Admin — Tags' }
+
 export default async function AdminTagsPage() {
   await requireAdmin()
   const tags = await getTags()

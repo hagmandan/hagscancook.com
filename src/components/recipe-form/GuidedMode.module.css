@@ -66,8 +66,6 @@
 
 /* ── Panel ───────────────────────────────────────────────────── */
 
-.panel {}
-
 .fields {
   display: flex;
   flex-direction: column;
