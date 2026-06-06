@@ -65,8 +65,7 @@ export const config = {
      * - _next/static and _next/image (Next.js internals)
      * - favicon.ico
      * - /api/auth/* (auth routes must be reachable without a session cookie)
-     * - /api/upload (checked server-side in the route handler)
      */
-    '/((?!_next/static|_next/image|favicon.ico|api/auth|api/upload).*)',
+    '/((?!_next/static|_next/image|favicon.ico|api/auth).*)',
   ],
 }
