@@ -11,6 +11,7 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import { deleteRecipe } from '@/lib/actions/recipes'
+import { useToast } from '@/lib/toast'
 import styles from './my-recipes.module.css'
 
 interface RecipeRowActionsProps {
@@ -22,11 +23,18 @@ interface RecipeRowActionsProps {
 export function RecipeRowActions({ recipeId, recipeSlug, status }: RecipeRowActionsProps) {
   const [confirming, setConfirming] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const toast = useToast()
 
   async function handleDelete() {
     setDeleting(true)
-    await deleteRecipe(recipeId)
-    // deleteRecipe calls redirect() — page navigates away automatically
+    const result = await deleteRecipe(recipeId)
+    // If deleteRecipe succeeded it called redirect() — component unmounts
+    // and we never reach here. If we do reach here, there was an error.
+    if ('error' in result) {
+      toast.error('Error', 'Could not delete recipe')
+      setDeleting(false)
+      setConfirming(false)
+    }
   }
 
   if (confirming) {
