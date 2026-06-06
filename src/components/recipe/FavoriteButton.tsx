@@ -9,6 +9,7 @@
 
 import { useState, useTransition } from 'react'
 import { toggleFavorite } from '@/lib/actions/favorites'
+import { useToast } from '@/lib/toast'
 import styles from './FavoriteButton.module.css'
 
 interface FavoriteButtonProps {
@@ -24,6 +25,7 @@ export function FavoriteButton({
 }: FavoriteButtonProps) {
   const [favorited, setFavorited] = useState(initialFavorited)
   const [isPending, startTransition] = useTransition()
+  const toast = useToast()
 
   function handleClick() {
     // Optimistic update
@@ -31,8 +33,8 @@ export function FavoriteButton({
     startTransition(async () => {
       const result = await toggleFavorite(recipeId, recipeSlug)
       if ('error' in result) {
-        // Revert on error
         setFavorited((prev) => !prev)
+        toast.error('Error', 'Could not update favorite')
       } else {
         setFavorited(result.favorited)
       }
