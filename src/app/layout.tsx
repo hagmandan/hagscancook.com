@@ -4,6 +4,7 @@ import './globals.css'
 import { Providers } from '@/components/layout/Providers'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
+import { ToastContainer } from '@/lib/toast'
 
 const geist = Geist({
   variable: '--font-geist',
@@ -15,18 +16,14 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://hagscancook.com'
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'hags can cook',
-    template: '%s — hags can cook',
+    default: 'HagsCanCook',
+    template: '%s — HagsCanCook',
   },
   description: 'A community recipe site for home cooks.',
   openGraph: {
-    siteName: 'hags can cook',
+    siteName: 'HagsCanCook',
     type: 'website',
     locale: 'en_US',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    site: '@hagscancook',
   },
   robots: {
     index: true,
@@ -62,6 +59,7 @@ export default function RootLayout({
           <Header />
           <main className="flex-1">{children}</main>
           <Footer />
+          <ToastContainer />
         </Providers>
       </body>
     </html>

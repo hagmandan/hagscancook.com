@@ -23,6 +23,7 @@ import {
 } from 'react'
 import { onAuthStateChanged, signOut, type User } from 'firebase/auth'
 import { auth } from '@/lib/firebase-client'
+import { ToastProvider } from '@/lib/toast'
 
 // ---------------------------------------------------------------------------
 // Auth context
@@ -79,8 +80,10 @@ export function Providers({ children }: ProvidersProps) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, logout }}>
-      {children}
-    </AuthContext.Provider>
+    <ToastProvider>
+      <AuthContext.Provider value={{ user, loading, logout }}>
+        {children}
+      </AuthContext.Provider>
+    </ToastProvider>
   )
 }
