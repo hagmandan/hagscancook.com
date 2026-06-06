@@ -18,7 +18,7 @@
 
 import { type NextRequest, NextResponse } from 'next/server'
 import { cert, getApps, initializeApp } from 'firebase-admin/app'
-import { getAuth } from 'firebase-admin/auth'
+import { getAuth, type DecodedIdToken } from 'firebase-admin/auth'
 import { upsertUser } from '@/lib/auth'
 import { captureException } from '@/lib/monitoring/errors'
 
@@ -46,7 +46,13 @@ const SESSION_DURATION_MS = 60 * 60 * 24 * 5 * 1000
 export async function POST(request: NextRequest) {
   try {
     initAdmin()
+  } catch (err) {
+    console.error('[/api/auth/callback] Firebase Admin init failed:', err)
+    captureException(err, { feature: 'auth', operation: 'init', runtime: 'server' })
+    return NextResponse.json({ error: 'Authentication failed' }, { status: 401 })
+  }
 
+  try {
     const body = (await request.json()) as { idToken?: unknown }
     const idToken = body.idToken
 
@@ -58,24 +64,35 @@ export async function POST(request: NextRequest) {
     }
 
     // Create the session cookie. This also verifies the ID token.
-    const sessionCookie = await getAuth().createSessionCookie(idToken, {
-      expiresIn: SESSION_DURATION_MS,
-    })
+    let sessionCookie: string
+    let decoded: DecodedIdToken
+    try {
+      ;[sessionCookie, decoded] = await Promise.all([
+        getAuth().createSessionCookie(idToken, { expiresIn: SESSION_DURATION_MS }),
+        getAuth().verifyIdToken(idToken),
+      ])
+    } catch (err) {
+      console.error('[/api/auth/callback] Token verification failed:', err)
+      captureException(err, { feature: 'auth', operation: 'verify-token', runtime: 'server' })
+      return NextResponse.json({ error: 'Authentication failed' }, { status: 401 })
+    }
 
-    // Decode the token to get user info for the DB upsert.
-    const decoded = await getAuth().verifyIdToken(idToken)
+    try {
+      await upsertUser({
+        firebaseUid: decoded.uid,
+        email: decoded.email ?? '',
+        displayName: decoded.name ?? decoded.email?.split('@')[0] ?? 'User',
+        avatarUrl: decoded.picture,
+      })
+    } catch (err) {
+      console.error('[/api/auth/callback] DB upsert failed:', err)
+      captureException(err, { feature: 'auth', operation: 'upsert-user', runtime: 'server' })
+      return NextResponse.json({ error: 'Authentication failed' }, { status: 401 })
+    }
 
-    await upsertUser({
-      firebaseUid: decoded.uid,
-      email: decoded.email ?? '',
-      displayName: decoded.name ?? decoded.email?.split('@')[0] ?? 'User',
-      avatarUrl: decoded.picture,
-    })
-
-    // Set the session cookie on the response.
     const response = NextResponse.json({ status: 'ok' })
     response.cookies.set('__session', sessionCookie, {
-      maxAge: SESSION_DURATION_MS / 1000, // seconds
+      maxAge: SESSION_DURATION_MS / 1000,
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -84,11 +101,8 @@ export async function POST(request: NextRequest) {
 
     return response
   } catch (err) {
-    console.error('[/api/auth/callback]', err)
+    console.error('[/api/auth/callback] Unexpected error:', err)
     captureException(err, { feature: 'auth', operation: 'callback', runtime: 'server' })
-    return NextResponse.json(
-      { error: 'Authentication failed' },
-      { status: 401 }
-    )
+    return NextResponse.json({ error: 'Authentication failed' }, { status: 401 })
   }
 }
