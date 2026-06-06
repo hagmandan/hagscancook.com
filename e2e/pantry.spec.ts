@@ -18,9 +18,16 @@ test('user can view, add, edit, and remove pantry items', async ({ page }) => {
 
   await expect(page.getByRole('heading', { name: 'Pantry' })).toBeVisible()
 
-  // Seeded items are visible, grouped by category.
+  // Seeded items are visible (default list view).
   await expect(page.getByText('spaghetti', { exact: true })).toBeVisible()
   await expect(page.getByText('olive oil', { exact: true })).toBeVisible()
+
+  // Toggle to category (grid) view and back.
+  await page.getByTestId('pantry-view-category').click()
+  await expect(page.getByRole('heading', { name: 'Oils & Fats' })).toBeVisible()
+  await expect(page.getByText('olive oil', { exact: true })).toBeVisible()
+  await page.getByTestId('pantry-view-list').click()
+  await expect(page.getByTestId('pantry-sort')).toBeVisible()
 
   // Quick-add a new ingredient.
   await page.getByTestId('pantry-add-name').fill('basil')

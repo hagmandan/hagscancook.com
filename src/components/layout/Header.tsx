@@ -9,6 +9,7 @@
 import Link from 'next/link'
 import styles from './Header.module.css'
 import { UserMenu } from './UserMenu'
+import { PantryNavLink } from './PantryNavLink'
 import { ThemeToggle } from './ThemeToggle'
 
 export function Header() {
@@ -23,6 +24,7 @@ export function Header() {
           <Link href="/recipes" className={styles.navLink}>
             Recipes
           </Link>
+          <PantryNavLink className={styles.navLink} />
         </nav>
 
         <ThemeToggle />

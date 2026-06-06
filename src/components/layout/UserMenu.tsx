@@ -63,11 +63,6 @@ export function UserMenu() {
             </Link>
           </li>
           <li role="none">
-            <Link href="/pantry" className={styles.menuItem} role="menuitem">
-              Pantry
-            </Link>
-          </li>
-          <li role="none">
             <Link href="/favorites" className={styles.menuItem} role="menuitem">
               Favorites
             </Link>

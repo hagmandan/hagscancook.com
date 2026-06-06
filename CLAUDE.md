@@ -56,6 +56,14 @@ All mutations live in `src/lib/actions/`. Each action:
 
 Mode is controlled by the `?mode=` URL query param. Switching modes never resets the form — RHF v7 keeps unmounted field values by default (`shouldUnregister: false`). The same `RecipeForm` component handles both create (`/recipes/new`) and edit (`/recipes/[slug]/edit`).
 
+### Robots / crawl policy
+
+`src/app/robots.ts` uses an **allowlist** approach: `Disallow: /` by default, with explicit `Allow` rules for each public route. Any new page that should be publicly indexed must be added to the allowlist — auth-only and admin routes are blocked automatically.
+
+Currently allowed: `/` (home), `/recipes/` (index + detail pages), `/privacy`, `/terms`, `/dmca`, `/_next/static/`, `/_next/image/`, `/sitemap.xml`, and static assets.
+
+Known aggressive scrapers and AI training bots (GPTBot, CCBot, Bytespider, etc.) get a separate `Disallow: /` block. Note that security scanners ignore robots.txt entirely — CDN-level bot blocking (Cloud Armor) is needed for real protection.
+
 ### Styling
 
 CSS Modules (`*.module.css`) per component alongside global styles in `src/app/globals.css`. No CSS-in-JS.

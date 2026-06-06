@@ -41,7 +41,10 @@ export function PantryManager({ initialItems, ingredientTypes }: PantryManagerPr
     setItems((prev) => prev.filter((p) => p.id !== id))
   }
 
-  // Group items by category name, alphabetically within and across groups.
+  const [view, setView] = useState<'list' | 'category'>('list')
+  const [sortBy, setSortBy] = useState<'category' | 'name'>('category')
+
+  // Categories for the grid view — alphabetical within and across groups.
   const groups = useMemo(() => {
     const byType = new Map<string, PantryItemView[]>()
     for (const item of items) {
@@ -58,6 +61,17 @@ export function PantryManager({ initialItems, ingredientTypes }: PantryManagerPr
       }))
       .sort((a, b) => a.name.localeCompare(b.name))
   }, [items])
+
+  // Flat list for the list view — sorted by the chosen key.
+  const sortedItems = useMemo(() => {
+    return [...items].sort((a, b) => {
+      if (sortBy === 'category') {
+        const byType = a.type.name.localeCompare(b.type.name)
+        if (byType !== 0) return byType
+      }
+      return a.ingredient.name.localeCompare(b.ingredient.name)
+    })
+  }, [items, sortBy])
 
   return (
     <div className={styles.page}>
@@ -78,21 +92,77 @@ export function PantryManager({ initialItems, ingredientTypes }: PantryManagerPr
           </p>
         </div>
       ) : (
-        groups.map((group) => (
-          <section key={group.name} className={styles.section}>
-            <h2 className={styles.sectionTitle}>{group.name}</h2>
+        <>
+          <div className={styles.toolbar}>
+            <div className={styles.viewToggle} role="group" aria-label="View mode">
+              <button
+                type="button"
+                className={`${styles.toggleButton} ${view === 'list' ? styles.toggleActive : ''}`}
+                onClick={() => setView('list')}
+                aria-pressed={view === 'list'}
+                data-testid="pantry-view-list"
+              >
+                List
+              </button>
+              <button
+                type="button"
+                className={`${styles.toggleButton} ${view === 'category' ? styles.toggleActive : ''}`}
+                onClick={() => setView('category')}
+                aria-pressed={view === 'category'}
+                data-testid="pantry-view-category"
+              >
+                Categories
+              </button>
+            </div>
+
+            {view === 'list' && (
+              <label className={styles.sortControl}>
+                <span className={styles.sortLabel}>Sort by</span>
+                <select
+                  className={styles.sortSelect}
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as 'category' | 'name')}
+                  data-testid="pantry-sort"
+                >
+                  <option value="category">Category</option>
+                  <option value="name">Name</option>
+                </select>
+              </label>
+            )}
+          </div>
+
+          {view === 'list' ? (
             <ul className={styles.list} role="list">
-              {group.items.map((item) => (
+              {sortedItems.map((item) => (
                 <PantryRow
                   key={item.id}
                   item={item}
+                  showCategory={sortBy === 'category'}
                   onUpdated={upsertLocal}
                   onRemoved={removeLocal}
                 />
               ))}
             </ul>
-          </section>
-        ))
+          ) : (
+            <div className={styles.categoryGrid}>
+              {groups.map((group) => (
+                <section key={group.name} className={styles.categoryCard}>
+                  <h2 className={styles.sectionTitle}>{group.name}</h2>
+                  <ul className={styles.list} role="list">
+                    {group.items.map((item) => (
+                      <PantryRow
+                        key={item.id}
+                        item={item}
+                        onUpdated={upsertLocal}
+                        onRemoved={removeLocal}
+                      />
+                    ))}
+                  </ul>
+                </section>
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   )
@@ -207,10 +277,12 @@ function QuickAdd({
 
 function PantryRow({
   item,
+  showCategory = false,
   onUpdated,
   onRemoved,
 }: {
   item: PantryItemView
+  showCategory?: boolean
   onUpdated: (item: PantryItemView) => void
   onRemoved: (id: string) => void
 }) {
@@ -315,6 +387,7 @@ function PantryRow({
     <li className={styles.row}>
       <div className={styles.rowMain}>
         <span className={styles.itemName}>{item.ingredient.name}</span>
+        {showCategory && <span className={styles.categoryTag}>{item.type.name}</span>}
         {(item.amount || item.unit) && (
           <span className={styles.itemAmount}>
             {[item.amount, item.unit].filter(Boolean).join(' ')}
