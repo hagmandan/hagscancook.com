@@ -24,7 +24,7 @@ async function getPantryItems(userId: string): Promise<PantryItemView[]> {
         select: {
           id: true,
           name: true,
-          type: { select: { id: true, name: true } },
+          type: { select: { id: true, name: true, slug: true } },
         },
       },
     },
@@ -48,7 +48,7 @@ export default async function PantryPage() {
     getPantryItems(session.userId),
     db.ingredientType.findMany({
       orderBy: { name: 'asc' },
-      select: { id: true, name: true },
+      select: { id: true, name: true, slug: true },
     }),
   ])
 

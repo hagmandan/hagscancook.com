@@ -27,7 +27,7 @@ export interface PantryItemView {
   unit: string | null
   note: string | null
   ingredient: { id: string; name: string }
-  type: { id: string; name: string }
+  type: { id: string; name: string; slug: string }
 }
 
 const ITEM_SELECT = {
@@ -39,7 +39,7 @@ const ITEM_SELECT = {
     select: {
       id: true,
       name: true,
-      type: { select: { id: true, name: true } },
+      type: { select: { id: true, name: true, slug: true } },
     },
   },
 } as const
@@ -49,7 +49,7 @@ type ItemRow = {
   amount: string | null
   unit: string | null
   note: string | null
-  ingredient: { id: string; name: string; type: { id: string; name: string } }
+  ingredient: { id: string; name: string; type: { id: string; name: string; slug: string } }
 }
 
 function toView(row: ItemRow): PantryItemView {
@@ -108,6 +108,42 @@ export async function addPantryItem(
       runtime: 'server',
     })
     return { error: 'Failed to add item. Please try again.' }
+  }
+}
+
+/**
+ * Adds multiple ingredients to the current user's pantry in parallel.
+ * Skips any inputs that fail validation; upserts are idempotent.
+ */
+export async function addPantryItems(
+  inputs: AddPantryItemInput[]
+): Promise<{ items: PantryItemView[] } | { error: string }> {
+  const session = await requireSession()
+
+  const valid = inputs
+    .map((i) => AddPantryItemSchema.safeParse(i))
+    .filter((p) => p.success)
+    .map((p) => p.data!)
+
+  if (valid.length === 0) return { error: 'No valid items to add' }
+
+  try {
+    const rows = await Promise.all(
+      valid.map(async (data) => {
+        const ingredientId = await resolveIngredient(data.ingredientName, data.typeId)
+        return db.pantryItem.upsert({
+          where: { userId_ingredientId: { userId: session.userId, ingredientId } },
+          create: { userId: session.userId, ingredientId, amount: null, unit: null, note: null },
+          update: {},
+          select: ITEM_SELECT,
+        })
+      })
+    )
+    revalidatePath('/pantry')
+    return { items: rows.map(toView) }
+  } catch (err) {
+    captureException(err, { feature: 'pantry', operation: 'bulk-add', runtime: 'server' })
+    return { error: 'Failed to add items. Please try again.' }
   }
 }
 
