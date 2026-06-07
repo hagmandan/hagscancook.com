@@ -163,7 +163,9 @@ function SectionCard({
 
   // All quick-add candidates: items + moreItems, excluding what's already in pantry
   const allSource = [...section.items, ...section.moreItems]
-  const allAvailable = allSource.filter((item) => !pantryNames.has(item.name))
+  const allAvailable = allSource
+    .filter((item) => !pantryNames.has(item.name))
+    .sort((a, b) => a.name.localeCompare(b.name))
 
   function toggle(name: string) {
     setSelected((prev) => {

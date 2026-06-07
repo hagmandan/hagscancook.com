@@ -41,9 +41,7 @@ export function PantryManager({ initialItems, ingredientTypes }: PantryManagerPr
     setItems((prev) => prev.filter((p) => p.id !== id))
   }
 
-  const [view, setView] = useState<'list' | 'category'>(
-    initialItems.length === 0 ? 'category' : 'list'
-  )
+  const [view, setView] = useState<'list' | 'category'>('category')
   const [sortBy, setSortBy] = useState<'category' | 'name'>('category')
 
   const sortedItems = useMemo(() => {
@@ -73,21 +71,21 @@ export function PantryManager({ initialItems, ingredientTypes }: PantryManagerPr
         <div className={styles.viewToggle} role="group" aria-label="View mode">
           <button
             type="button"
-            className={`${styles.toggleButton} ${view === 'list' ? styles.toggleActive : ''}`}
-            onClick={() => setView('list')}
-            aria-pressed={view === 'list'}
-            data-testid="pantry-view-list"
-          >
-            List
-          </button>
-          <button
-            type="button"
             className={`${styles.toggleButton} ${view === 'category' ? styles.toggleActive : ''}`}
             onClick={() => setView('category')}
             aria-pressed={view === 'category'}
             data-testid="pantry-view-category"
           >
             Categories
+          </button>
+          <button
+            type="button"
+            className={`${styles.toggleButton} ${view === 'list' ? styles.toggleActive : ''}`}
+            onClick={() => setView('list')}
+            aria-pressed={view === 'list'}
+            data-testid="pantry-view-list"
+          >
+            List
           </button>
         </div>
 
