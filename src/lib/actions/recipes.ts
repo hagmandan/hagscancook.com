@@ -321,31 +321,41 @@ export async function loadMoreRecipes(
     ...(filters.tag ? { tags: { some: { tag: { slug: filters.tag } } } } : {}),
   }
 
-  const rows = await db.recipe.findMany({
-    where,
-    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-    take: FEED_PAGE_SIZE + 1,
-    cursor: { id: cursor },
-    skip: 1,
-    select: {
-      id: true,
-      slug: true,
-      title: true,
-      description: true,
-      coverImageUrl: true,
-      prepTimeMins: true,
-      cookTimeMins: true,
-      servings: true,
-      cuisine: true,
-      author: { select: { displayName: true } },
-    },
-  })
+  try {
+    const rows = await db.recipe.findMany({
+      where,
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: FEED_PAGE_SIZE + 1,
+      cursor: { id: cursor },
+      skip: 1,
+      select: {
+        id: true,
+        slug: true,
+        title: true,
+        description: true,
+        coverImageUrl: true,
+        prepTimeMins: true,
+        cookTimeMins: true,
+        servings: true,
+        cuisine: true,
+        author: { select: { displayName: true } },
+      },
+    })
 
-  const hasMore = rows.length > FEED_PAGE_SIZE
-  const recipes = hasMore ? rows.slice(0, FEED_PAGE_SIZE) : rows
-  const nextCursor = hasMore ? recipes[recipes.length - 1].id : null
+    const hasMore = rows.length > FEED_PAGE_SIZE
+    const recipes = hasMore ? rows.slice(0, FEED_PAGE_SIZE) : rows
+    const nextCursor = hasMore ? recipes[recipes.length - 1].id : null
 
-  return { recipes, nextCursor }
+    return { recipes, nextCursor }
+  } catch (err) {
+    captureException(err, {
+      feature: 'recipe-feed',
+      operation: 'load-more',
+      cursor,
+      runtime: 'server',
+    })
+    throw err
+  }
 }
 
 // ---------------------------------------------------------------------------

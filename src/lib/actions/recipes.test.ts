@@ -107,4 +107,18 @@ describe('loadMoreRecipes', () => {
       })
     )
   })
+
+  it('passes tag filter to the where clause', async () => {
+    mockFindMany.mockResolvedValue([])
+
+    await loadMoreRecipes('abc', { tag: 'quick-meals' })
+
+    expect(mockFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          tags: { some: { tag: { slug: 'quick-meals' } } },
+        }),
+      })
+    )
+  })
 })
