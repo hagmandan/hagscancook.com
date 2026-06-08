@@ -12,7 +12,8 @@
 import Link from 'next/link'
 import { db } from '@/lib/db'
 import { requireSession } from '@/lib/auth'
-import { RecipeCard } from '@/components/recipe/RecipeCard'
+import { RecipesFeed } from './RecipesFeed'
+import { FEED_PAGE_SIZE, type RecipeFilters, type RecipeSummary } from '@/lib/actions/recipes'
 import { CUISINES } from '@/lib/constants/cuisines'
 import { DIETARY_RESTRICTIONS } from '@/lib/constants/dietary-restrictions'
 import styles from './recipes.module.css'
@@ -26,11 +27,10 @@ interface RecipesPageProps {
   }>
 }
 
-async function getRecipes(filters: {
-  cuisine?: string
-  dietary?: string
-  tag?: string
-}) {
+async function getRecipes(filters: RecipeFilters): Promise<{
+  recipes: RecipeSummary[]
+  nextCursor: string | null
+}> {
   const where: Prisma.RecipeWhereInput = {
     status: 'published',
     deletedAt: null,
@@ -48,9 +48,10 @@ async function getRecipes(filters: {
     where.tags = { some: { tag: { slug: filters.tag } } }
   }
 
-  return db.recipe.findMany({
+  const rows = await db.recipe.findMany({
     where,
-    orderBy: { createdAt: 'desc' },
+    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+    take: FEED_PAGE_SIZE + 1,
     select: {
       id: true,
       slug: true,
@@ -64,6 +65,12 @@ async function getRecipes(filters: {
       author: { select: { displayName: true } },
     },
   })
+
+  const hasMore = rows.length > FEED_PAGE_SIZE
+  const recipes = hasMore ? rows.slice(0, FEED_PAGE_SIZE) : rows
+  const nextCursor = hasMore ? recipes[recipes.length - 1].id : null
+
+  return { recipes, nextCursor }
 }
 
 async function getTags() {
@@ -76,12 +83,13 @@ export const metadata = {
 
 export default async function RecipesPage({ searchParams }: RecipesPageProps) {
   const filters = await searchParams
-  const [, recipes, tags] = await Promise.all([
+  const [, result, tags] = await Promise.all([
     requireSession(),
     getRecipes(filters),
     getTags(),
   ])
 
+  const { recipes, nextCursor } = result
   const hasFilters = !!(filters.cuisine || filters.dietary || filters.tag)
 
   return (
@@ -159,16 +167,11 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
           )}
         </div>
       ) : (
-        <>
-          <p className={styles.count}>{recipes.length} recipe{recipes.length !== 1 ? 's' : ''}</p>
-          <ul className={styles.grid} role="list">
-            {recipes.map((recipe) => (
-              <li key={recipe.id}>
-                <RecipeCard recipe={recipe} />
-              </li>
-            ))}
-          </ul>
-        </>
+        <RecipesFeed
+          initialRecipes={recipes}
+          initialCursor={nextCursor}
+          filters={filters}
+        />
       )}
     </div>
   )
