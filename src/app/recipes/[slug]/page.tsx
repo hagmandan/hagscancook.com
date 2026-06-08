@@ -19,6 +19,7 @@ import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth'
 import { InstructionsGate } from '@/components/recipe/InstructionsGate'
 import { FavoriteButton } from '@/components/recipe/FavoriteButton'
+import { AuthorStatusBar } from '@/components/recipe/AuthorStatusBar'
 import { toRecipeJsonLd } from '@/lib/utils/recipe-jsonld'
 import styles from './recipe.module.css'
 
@@ -30,7 +31,7 @@ interface RecipePageProps {
 
 async function getRecipe(slug: string) {
   return db.recipe.findFirst({
-    where: { slug, status: 'published', deletedAt: null },
+    where: { slug, deletedAt: null },
     include: {
       author: { select: { displayName: true, avatarUrl: true } },
       steps: { orderBy: { order: 'asc' } },
@@ -46,7 +47,7 @@ async function getRecipe(slug: string) {
 export async function generateMetadata({ params }: RecipePageProps) {
   const { slug } = await params
   const recipe = await getRecipe(slug)
-  if (!recipe) return {}
+  if (!recipe || recipe.status !== 'published') return {}
 
   const canonicalUrl = `${SITE_URL}/recipes/${slug}`
   const images = recipe.coverImageUrl
@@ -90,6 +91,9 @@ export default async function RecipePage({ params }: RecipePageProps) {
 
   if (!recipe) notFound()
 
+  // Draft recipes are only visible to their author
+  if (recipe.status === 'draft' && session?.userId !== recipe.authorId) notFound()
+
   const totalMins =
     (recipe.prepTimeMins ?? 0) + (recipe.cookTimeMins ?? 0) || null
 
@@ -102,6 +106,12 @@ export default async function RecipePage({ params }: RecipePageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      {session?.userId === recipe.authorId && (
+        <AuthorStatusBar
+          recipeId={recipe.id}
+          currentStatus={recipe.status as 'draft' | 'published'}
+        />
+      )}
     <article className={styles.page}>
       {/* Cover image */}
       {recipe.coverImageUrl && (
