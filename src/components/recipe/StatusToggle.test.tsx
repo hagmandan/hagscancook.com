@@ -18,7 +18,7 @@ vi.mock('@/lib/toast', () => ({
 
 // Mock CSS modules
 vi.mock('./StatusToggle.module.css', () => ({
-  default: { toggle: 'toggle', draft: 'draft', published: 'published', loading: 'loading' },
+  default: { toggle: 'toggle', draft: 'draft', published: 'published' },
 }))
 
 import { toggleRecipeStatus } from '@/lib/actions/recipes'
