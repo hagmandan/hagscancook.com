@@ -56,8 +56,17 @@ test.describe('Recipe feed pagination', () => {
       loadMoreVisible = await button.isVisible()
       if (loadMoreVisible) {
         await button.click()
-        // Wait for the click to process
-        await page.waitForTimeout(500)
+        // Wait for the button to settle: either disappears (last page) or re-enables (more pages)
+        await page.waitForFunction(() => {
+          const buttons = Array.from(document.querySelectorAll('button'))
+          const loadMoreBtn = buttons.find(
+            (b) =>
+              b.textContent?.includes('Load more') ||
+              b.textContent?.includes('Loading')
+          )
+          if (!loadMoreBtn) return true // button gone = last page loaded
+          return loadMoreBtn.textContent?.includes('Load more recipes') // button re-enabled
+        }, { timeout: 10000 })
       }
     }
 
