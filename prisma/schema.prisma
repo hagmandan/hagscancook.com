@@ -103,6 +103,7 @@ model Recipe {
   favorites           Favorite[]
 
   @@index([authorId])
+  @@index([status, deletedAt, createdAt, id])
   @@map("recipes")
 }
 
