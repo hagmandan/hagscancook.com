@@ -309,6 +309,7 @@ export async function toggleRecipeStatus(
       data: { status: newStatus },
     })
 
+    revalidatePath('/')
     revalidatePath('/my-recipes')
     revalidatePath(`/recipes/${existing.slug}`)
     revalidatePath('/recipes')
