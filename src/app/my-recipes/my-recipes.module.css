@@ -229,3 +229,7 @@ a.recipeTitle:hover { text-decoration: underline; text-underline-offset: 2px; }
 }
 
 .confirmNo:hover { background-color: var(--color-surface-raised); }
+
+.pagination {
+  margin-top: 0.5rem;
+}
