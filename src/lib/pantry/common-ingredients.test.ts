@@ -15,7 +15,7 @@ describe('sectionIdForTypeSlug', () => {
   })
 
   it('returns undefined for unmapped slugs', () => {
-    expect(sectionIdForTypeSlug('frozen')).toBeUndefined()
+    expect(sectionIdForTypeSlug('unknown')).toBeUndefined()
     expect(sectionIdForTypeSlug('other')).toBeUndefined()
   })
 })
