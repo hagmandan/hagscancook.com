@@ -351,7 +351,6 @@ export async function loadMoreRecipes(
     captureException(err, {
       feature: 'recipe-feed',
       operation: 'load-more',
-      cursor,
       runtime: 'server',
     })
     throw err
