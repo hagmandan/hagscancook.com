@@ -281,7 +281,7 @@ export async function deleteRecipe(
 // loadMoreRecipes
 // ---------------------------------------------------------------------------
 
-export const FEED_PAGE_SIZE = 20
+const FEED_PAGE_SIZE = 20
 
 export type RecipeFilters = {
   cuisine?: string

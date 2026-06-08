@@ -13,8 +13,10 @@ import Link from 'next/link'
 import { db } from '@/lib/db'
 import { requireSession } from '@/lib/auth'
 import { RecipesFeed } from './RecipesFeed'
-import { FEED_PAGE_SIZE, type RecipeFilters, type RecipeSummary } from '@/lib/actions/recipes'
+import type { RecipeFilters, RecipeSummary } from '@/lib/actions/recipes'
 import { CUISINES } from '@/lib/constants/cuisines'
+
+const FEED_PAGE_SIZE = 20
 import { DIETARY_RESTRICTIONS } from '@/lib/constants/dietary-restrictions'
 import styles from './recipes.module.css'
 import type { Prisma } from '@prisma/client'
