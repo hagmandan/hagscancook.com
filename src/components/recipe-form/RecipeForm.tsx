@@ -28,6 +28,8 @@ interface RecipeFormProps {
   initialValues?: Partial<RecipeFormValues>
   /** Set when editing — the DB UUID of the recipe being edited. */
   recipeId?: string
+  /** The recipe's current status. Defaults to 'draft' for new recipes. */
+  initialStatus?: 'draft' | 'published'
   /** All available tags to render in the multi-select. */
   tags: { id: string; name: string }[]
   /** All ingredient types for the per-row type selector. */
@@ -50,7 +52,7 @@ const DEFAULT_VALUES: RecipeFormValues = {
   steps: [],
 }
 
-export function RecipeForm({ initialValues, recipeId, tags, ingredientTypes }: RecipeFormProps) {
+export function RecipeForm({ initialValues, recipeId, initialStatus = 'draft', tags, ingredientTypes }: RecipeFormProps) {
   const searchParams = useSearchParams()
   const router = useRouter()
   const toast = useToast()
@@ -80,11 +82,11 @@ export function RecipeForm({ initialValues, recipeId, tags, ingredientTypes }: R
     router.push(`/recipes/${result.slug}`)
   }
 
-  function saveDraft() {
+  function save() {
     handleSubmit((data) => onSubmit(data, false))()
   }
 
-  function publish() {
+  function saveAndPublish() {
     handleSubmit((data) => onSubmit(data, true))()
   }
 
@@ -92,9 +94,10 @@ export function RecipeForm({ initialValues, recipeId, tags, ingredientTypes }: R
     <div className={styles.root}>
       <FormHeader
         form={form}
-        onSaveDraft={saveDraft}
-        onPublish={publish}
+        onSave={save}
+        onSaveAndPublish={saveAndPublish}
         isSubmitting={isSubmitting}
+        initialStatus={initialStatus}
       />
 
       {mode === 'guided' ? (

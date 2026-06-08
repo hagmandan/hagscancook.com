@@ -3,8 +3,8 @@
 /**
  * Sticky header rendered inside RecipeForm.
  *
- * Shows the live recipe title (via `watch`), a mode toggle, and Save Draft /
- * Publish action buttons. Must be a Client Component because it reads from
+ * Shows the live recipe title (via `watch`), a mode toggle, and Save /
+ * Save and Publish action buttons. Must be a Client Component because it reads from
  * React Hook Form state.
  */
 
@@ -16,16 +16,18 @@ import styles from './FormHeader.module.css'
 
 interface FormHeaderProps {
   form: UseFormReturn<RecipeFormValues>
-  onSaveDraft: () => void
-  onPublish: () => void
+  onSave: () => void
+  onSaveAndPublish: () => void
   isSubmitting: boolean
+  initialStatus: 'draft' | 'published'
 }
 
 export function FormHeader({
   form,
-  onSaveDraft,
-  onPublish,
+  onSave,
+  onSaveAndPublish,
   isSubmitting,
+  initialStatus,
 }: FormHeaderProps) {
   const title = form.watch('title')
   const pathname = usePathname()
@@ -70,20 +72,22 @@ export function FormHeader({
         <div className={styles.actions}>
           <button
             type="button"
-            onClick={onSaveDraft}
+            onClick={onSave}
             disabled={isSubmitting}
             className={`${styles.draftButton} ${isSubmitting ? styles.loading : ''}`}
           >
-            Save draft
+            Save
           </button>
-          <button
-            type="button"
-            onClick={onPublish}
-            disabled={isSubmitting}
-            className={`${styles.publishButton} ${isSubmitting ? styles.loading : ''}`}
-          >
-            Publish
-          </button>
+          {initialStatus === 'draft' && (
+            <button
+              type="button"
+              onClick={onSaveAndPublish}
+              disabled={isSubmitting}
+              className={`${styles.publishButton} ${isSubmitting ? styles.loading : ''}`}
+            >
+              Save and Publish
+            </button>
+          )}
         </div>
       </div>
     </div>

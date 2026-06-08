@@ -91,6 +91,7 @@ export default async function EditRecipePage({ params }: EditRecipePageProps) {
     <RecipeForm
       initialValues={initialValues}
       recipeId={recipe.id}
+      initialStatus={recipe.status as 'draft' | 'published'}
       tags={tags}
       ingredientTypes={ingredientTypes}
     />
