@@ -275,3 +275,52 @@ export async function deleteRecipe(
   // redirect() throws a special Next.js signal — must be outside try/catch
   redirect('/my-recipes')
 }
+
+// ---------------------------------------------------------------------------
+// toggleRecipeStatus
+// ---------------------------------------------------------------------------
+
+/**
+ * Flips a recipe's status between draft and published.
+ * Only the recipe's author can call this.
+ *
+ * @param recipeId - The recipe's UUID
+ */
+export async function toggleRecipeStatus(
+  recipeId: string
+): Promise<{ status: 'draft' | 'published' } | { error: string }> {
+  const session = await requireSession()
+
+  const existing = await db.recipe.findUnique({
+    where: { id: recipeId },
+    select: { authorId: true, slug: true, status: true },
+  })
+
+  if (!existing) return { error: 'Recipe not found' }
+  if (existing.authorId !== session.userId) {
+    return { error: 'Not authorised to update this recipe' }
+  }
+
+  const newStatus = existing.status === 'published' ? 'draft' : 'published'
+
+  try {
+    await db.recipe.update({
+      where: { id: recipeId },
+      data: { status: newStatus },
+    })
+
+    revalidatePath('/my-recipes')
+    revalidatePath(`/recipes/${existing.slug}`)
+    revalidatePath('/recipes')
+
+    return { status: newStatus }
+  } catch (err) {
+    captureException(err, {
+      feature: 'recipe-status',
+      operation: 'toggle',
+      recipeId,
+      runtime: 'server',
+    })
+    return { error: 'Failed to update recipe status. Please try again.' }
+  }
+}
