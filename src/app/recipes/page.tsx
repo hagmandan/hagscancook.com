@@ -15,9 +15,8 @@ import { requireSession } from '@/lib/auth'
 import { RecipesFeed } from './RecipesFeed'
 import type { RecipeFilters, RecipeSummary } from '@/lib/actions/recipes'
 import { CUISINES } from '@/lib/constants/cuisines'
-
-const FEED_PAGE_SIZE = 20
 import { DIETARY_RESTRICTIONS } from '@/lib/constants/dietary-restrictions'
+import { FEED_PAGE_SIZE } from '@/lib/constants/pagination'
 import styles from './recipes.module.css'
 import type { Prisma } from '@prisma/client'
 

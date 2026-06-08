@@ -22,6 +22,7 @@ import { RecipeSchema, type RecipeFormValues } from '@/lib/schemas/recipe'
 import { generateUniqueSlug } from '@/lib/utils/slugify'
 import { resolveIngredient } from '@/lib/ingredients'
 import { captureException } from '@/lib/monitoring/errors'
+import { FEED_PAGE_SIZE } from '@/lib/constants/pagination'
 
 // ---------------------------------------------------------------------------
 // createRecipe
@@ -280,8 +281,6 @@ export async function deleteRecipe(
 // ---------------------------------------------------------------------------
 // loadMoreRecipes
 // ---------------------------------------------------------------------------
-
-const FEED_PAGE_SIZE = 20
 
 export type RecipeFilters = {
   cuisine?: string
