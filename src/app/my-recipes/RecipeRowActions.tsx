@@ -1,17 +1,10 @@
 'use client'
 
-/**
- * Edit / Delete action buttons for a recipe row in My Recipes.
- *
- * Client Component because delete confirmation and the Server Action call
- * need interactivity. The Server Action `deleteRecipe` handles its own
- * redirect after soft-deletion.
- */
-
 import Link from 'next/link'
 import { useState } from 'react'
 import { deleteRecipe } from '@/lib/actions/recipes'
 import { useToast } from '@/lib/toast'
+import { StatusToggle } from '@/components/recipe/StatusToggle'
 import styles from './my-recipes.module.css'
 
 interface RecipeRowActionsProps {
@@ -68,14 +61,7 @@ export function RecipeRowActions({ recipeId, recipeSlug, status }: RecipeRowActi
       >
         Edit
       </Link>
-      {status === 'draft' && (
-        <Link
-          href={`/recipes/${recipeSlug}/edit?publish=1`}
-          className={styles.publishButton}
-        >
-          Publish
-        </Link>
-      )}
+      <StatusToggle recipeId={recipeId} currentStatus={status} />
       <button
         onClick={() => setConfirming(true)}
         className={styles.deleteButton}
