@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { afterEach, describe, it, expect, vi } from 'vitest'
+import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Toast } from './Toast'
 import type { ToastItem } from '@/lib/toast'
@@ -19,6 +19,10 @@ const successToast: ToastItem = {
 }
 
 describe('Toast', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   it('renders the title and message', () => {
     render(<Toast toast={errorToast} onDismiss={() => {}} />)
     expect(screen.getByText('Error')).toBeInTheDocument()
@@ -31,11 +35,17 @@ describe('Toast', () => {
   })
 
   it('calls onDismiss when dismiss button is clicked', async () => {
+    vi.useFakeTimers()
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
     const onDismiss = vi.fn()
     render(<Toast toast={errorToast} onDismiss={onDismiss} />)
-    await userEvent.click(screen.getByRole('button', { name: 'Dismiss notification' }))
+    await user.click(screen.getByRole('button', { name: 'Dismiss notification' }))
+
     // onDismiss is called after the 250ms exit animation
-    await new Promise((r) => setTimeout(r, 260))
+    act(() => {
+      vi.advanceTimersByTime(250)
+    })
+
     expect(onDismiss).toHaveBeenCalledOnce()
   })
 

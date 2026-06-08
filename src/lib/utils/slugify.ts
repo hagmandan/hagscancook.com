@@ -16,6 +16,8 @@ import { db } from '@/lib/db'
 
 export function toSlug(title: string): string {
   return title
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .trim()
     .replace(/[^\w\s-]/g, '')   // strip non-word chars (except spaces and hyphens)
