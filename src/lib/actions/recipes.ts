@@ -17,6 +17,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { requireSession } from '@/lib/auth'
+import type { Prisma } from '@prisma/client'
 import { RecipeSchema, type RecipeFormValues } from '@/lib/schemas/recipe'
 import { generateUniqueSlug } from '@/lib/utils/slugify'
 import { resolveIngredient } from '@/lib/ingredients'
@@ -274,6 +275,77 @@ export async function deleteRecipe(
 
   // redirect() throws a special Next.js signal — must be outside try/catch
   redirect('/my-recipes')
+}
+
+// ---------------------------------------------------------------------------
+// loadMoreRecipes
+// ---------------------------------------------------------------------------
+
+export const FEED_PAGE_SIZE = 20
+
+export type RecipeFilters = {
+  cuisine?: string
+  dietary?: string
+  tag?: string
+}
+
+export type RecipeSummary = {
+  id: string
+  slug: string
+  title: string
+  description: string
+  coverImageUrl: string | null
+  prepTimeMins: number | null
+  cookTimeMins: number | null
+  servings: number | null
+  cuisine: string | null
+  author: { displayName: string }
+}
+
+export type RecipePage = {
+  recipes: RecipeSummary[]
+  nextCursor: string | null
+}
+
+export async function loadMoreRecipes(
+  cursor: string,
+  filters: RecipeFilters
+): Promise<RecipePage> {
+  await requireSession()
+
+  const where: Prisma.RecipeWhereInput = {
+    status: 'published',
+    deletedAt: null,
+    ...(filters.cuisine ? { cuisine: filters.cuisine } : {}),
+    ...(filters.dietary ? { dietaryRestrictions: { has: filters.dietary } } : {}),
+    ...(filters.tag ? { tags: { some: { tag: { slug: filters.tag } } } } : {}),
+  }
+
+  const rows = await db.recipe.findMany({
+    where,
+    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+    take: FEED_PAGE_SIZE + 1,
+    cursor: { id: cursor },
+    skip: 1,
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      description: true,
+      coverImageUrl: true,
+      prepTimeMins: true,
+      cookTimeMins: true,
+      servings: true,
+      cuisine: true,
+      author: { select: { displayName: true } },
+    },
+  })
+
+  const hasMore = rows.length > FEED_PAGE_SIZE
+  const recipes = hasMore ? rows.slice(0, FEED_PAGE_SIZE) : rows
+  const nextCursor = hasMore ? recipes[recipes.length - 1].id : null
+
+  return { recipes, nextCursor }
 }
 
 // ---------------------------------------------------------------------------
