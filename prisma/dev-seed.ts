@@ -262,11 +262,35 @@ async function upsertE2EPantry() {
   return pantry.length
 }
 
+async function upsertPaginationRecipes() {
+  const e2eUser = await prisma.user.findUnique({
+    where: { email: 'e2e-user@hagscancook.test' },
+    select: { id: true },
+  })
+  if (!e2eUser) return
+
+  for (let i = 1; i <= 25; i++) {
+    await prisma.recipe.upsert({
+      where: { slug: `e2e-pagination-recipe-${i}` },
+      update: {},
+      create: {
+        slug: `e2e-pagination-recipe-${i}`,
+        title: `Pagination Test Recipe ${i}`,
+        description: `A simple recipe for pagination testing (${i}).`,
+        status: 'published',
+        authorId: e2eUser.id,
+      },
+    })
+  }
+  console.log('  ✓ 25 pagination test recipes seeded')
+}
+
 async function main() {
   console.log('🌱 Seeding development fixtures…')
   await upsertLookups()
   const recipe = await upsertE2ERecipe()
   const pantryCount = await upsertE2EPantry()
+  await upsertPaginationRecipes()
   console.log(`  ✓ recipe: /recipes/${recipe.slug}`)
   console.log(`  ✓ user: ${E2E_USER.email}`)
   console.log(`  ✓ pantry: ${pantryCount} items`)
