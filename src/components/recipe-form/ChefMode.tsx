@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { type UseFormReturn } from 'react-hook-form'
-import { useCoverUpload } from './useCoverUpload'
 import { useTitleAvailability } from '@/lib/hooks/useTitleAvailability'
 import type { RecipeFormValues } from '@/lib/schemas/recipe'
 import { LIMITS } from '@/lib/schemas/recipe'
@@ -28,12 +27,10 @@ const cookingMethodOptions = COOKING_METHODS.map((m) => ({ label: m, value: m })
 export function ChefMode({ form, tags, ingredientTypes, recipeId }: ChefModeProps) {
   const { register, watch, setValue, formState: { errors } } = form
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const { isUploading, fileInputRef, handleCoverUpload } = useCoverUpload(setValue)
 
   const title = watch('title')
   const { taken: titleTaken } = useTitleAvailability(title, recipeId)
   const description = watch('description')
-  const coverImageUrl = watch('coverImageUrl')
   const cookingMethods = watch('cookingMethods')
   const dietaryRestrictions = watch('dietaryRestrictions')
   const tagIds = watch('tagIds')
@@ -80,35 +77,6 @@ export function ChefMode({ form, tags, ingredientTypes, recipeId }: ChefModeProp
             {errors.description && <span className={styles.error}>{errors.description.message}</span>}
           </div>
 
-          <div className={styles.field}>
-            <label className={styles.label}>Cover photo</label>
-            <div className={styles.coverWrapper}>
-              {coverImageUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={coverImageUrl} alt="Cover preview" className={styles.coverPreview} />
-              ) : (
-                <div className={`${styles.coverPlaceholder} ${isUploading ? styles.coverLoading : ''}`}>
-                  {isUploading ? '' : 'No image selected'}
-                </div>
-              )}
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                ref={fileInputRef}
-                onChange={handleCoverUpload}
-                className={styles.fileInput}
-                data-testid="cover-upload"
-              />
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploading}
-                className={`${styles.uploadButton} ${isUploading ? styles.loading : ''}`}
-              >
-                {coverImageUrl ? 'Change photo' : 'Upload photo'}
-              </button>
-            </div>
-          </div>
         </section>
 
         {/* Ingredients */}

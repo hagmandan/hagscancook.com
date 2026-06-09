@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { type UseFormReturn } from 'react-hook-form'
-import { useCoverUpload } from './useCoverUpload'
 import { useTitleAvailability } from '@/lib/hooks/useTitleAvailability'
 import type { RecipeFormValues } from '@/lib/schemas/recipe'
 import { LIMITS } from '@/lib/schemas/recipe'
@@ -38,9 +37,7 @@ const cookingMethodOptions = COOKING_METHODS.map((m) => ({ label: m, value: m })
 export function GuidedMode({ form, tags, ingredientTypes, recipeId }: GuidedModeProps) {
   const [activeTab, setActiveTab] = useState<Tab>('about')
   const { register, watch, setValue, formState: { errors } } = form
-  const { isUploading, fileInputRef, handleCoverUpload } = useCoverUpload(setValue)
 
-  const coverImageUrl = watch('coverImageUrl')
   const cookingMethods = watch('cookingMethods')
   const dietaryRestrictions = watch('dietaryRestrictions')
   const tagIds = watch('tagIds')
@@ -90,10 +87,9 @@ export function GuidedMode({ form, tags, ingredientTypes, recipeId }: GuidedMode
         {/* About tab */}
         {activeTab === 'about' && (
           <div className={styles.fields}>
-            <p className={styles.hint}>Start with the basics — what&apos;s the recipe and what does it look like?</p>
+            <p className={styles.hint}>Start with the basics — what&apos;s the recipe and why should someone make it?</p>
 
             <div className={styles.aboutGrid}>
-              {/* Left: title + description */}
               <div className={styles.aboutMain}>
                 <div className={styles.field}>
                   <label className={styles.label} htmlFor="g-title">
@@ -127,36 +123,6 @@ export function GuidedMode({ form, tags, ingredientTypes, recipeId }: GuidedMode
                   />
                   <CharCounter value={watchedValues.description} max={LIMITS.DESCRIPTION} />
                   {errors.description && <span className={styles.error}>{errors.description.message}</span>}
-                </div>
-              </div>
-
-              {/* Right: cover photo */}
-              <div className={styles.field}>
-                <label className={styles.label}>Cover photo</label>
-                <div className={styles.coverWrapper}>
-                  {coverImageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={coverImageUrl} alt="Cover" className={styles.coverPreview} />
-                  ) : (
-                    <div className={`${styles.coverPlaceholder} ${isUploading ? styles.coverLoading : ''}`}>
-                      {isUploading ? '' : 'No photo yet'}
-                    </div>
-                  )}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    ref={fileInputRef}
-                    onChange={handleCoverUpload}
-                    className={styles.fileInput}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploading}
-                    className={`${styles.uploadButton} ${isUploading ? styles.loading : ''}`}
-                  >
-                    {coverImageUrl ? 'Change photo' : 'Upload photo'}
-                  </button>
                 </div>
               </div>
             </div>
