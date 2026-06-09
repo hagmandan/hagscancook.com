@@ -50,8 +50,9 @@ export async function generateMetadata({ params }: RecipePageProps) {
   if (!recipe || recipe.status !== 'published') return {}
 
   const canonicalUrl = `${SITE_URL}/recipes/${slug}`
-  const images = recipe.coverImageUrl
-    ? [{ url: recipe.coverImageUrl, alt: recipe.title }]
+  const imageApproved = recipe.coverImageUrl && recipe.coverImageStatus === 'approved'
+  const images = imageApproved
+    ? [{ url: recipe.coverImageUrl!, alt: recipe.title }]
     : []
 
   return {
@@ -66,10 +67,10 @@ export async function generateMetadata({ params }: RecipePageProps) {
       images,
     },
     twitter: {
-      card: recipe.coverImageUrl ? 'summary_large_image' : 'summary',
+      card: imageApproved ? 'summary_large_image' : 'summary',
       title: recipe.title,
       description: recipe.description,
-      images: recipe.coverImageUrl ? [recipe.coverImageUrl] : [],
+      images: imageApproved ? [recipe.coverImageUrl!] : [],
     },
   }
 }
@@ -114,7 +115,7 @@ export default async function RecipePage({ params }: RecipePageProps) {
       )}
     <article className={styles.page}>
       {/* Cover image */}
-      {recipe.coverImageUrl && (
+      {recipe.coverImageUrl && recipe.coverImageStatus === 'approved' && (
         <div className={styles.cover}>
           <Image
             src={recipe.coverImageUrl}
