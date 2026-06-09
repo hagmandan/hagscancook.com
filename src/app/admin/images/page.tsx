@@ -37,14 +37,12 @@ export default async function AdminImagesPage() {
         <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           {recipes.map((recipe) => (
             <li key={recipe.id} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={recipe.coverImageUrl!}
-                alt={recipe.title}
-                width={160}
-                height={120}
-                style={{ objectFit: 'cover', flexShrink: 0, borderRadius: '4px' }}
-              />
+              {recipe.coverImageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={recipe.coverImageUrl} alt={recipe.title} width={160} height={120} style={{ objectFit: 'cover', borderRadius: '4px' }} />
+              ) : (
+                <div style={{ width: 160, height: 120, background: '#eee', borderRadius: '4px', flexShrink: 0 }} />
+              )}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                 <strong>{recipe.title}</strong>
                 <span style={{ fontSize: '0.875rem', color: '#666' }}>
