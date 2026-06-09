@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test'
 
 // The seeded e2e-user has a pantry with olive oil, spaghetti, and parmesan.
+test.describe.configure({ mode: 'serial' })
+
 test.beforeEach(async ({ context }) => {
   await context.addCookies([
     {
@@ -16,16 +18,20 @@ test.beforeEach(async ({ context }) => {
 test('user can view, add, edit, and remove pantry items', async ({ page }) => {
   await page.goto('/pantry')
 
-  await expect(page.getByRole('heading', { name: 'Pantry' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Pantry', exact: true })).toBeVisible()
 
-  // Seeded items are visible (default list view).
+  // Seeded items are visible (default category view).
   await expect(page.getByText('spaghetti', { exact: true })).toBeVisible()
   await expect(page.getByText('olive oil', { exact: true })).toBeVisible()
 
-  // Toggle to category view and back.
+  // Toggle to list view and back.
+  await page.getByTestId('pantry-view-list').click()
+  await expect(page.getByTestId('pantry-sort')).toBeVisible()
   await page.getByTestId('pantry-view-category').click()
   await expect(page.getByRole('heading', { name: 'Pantry Staples' })).toBeVisible()
   await expect(page.getByText('olive oil', { exact: true })).toBeVisible()
+
+  // Switch to list view for inline editing.
   await page.getByTestId('pantry-view-list').click()
   await expect(page.getByTestId('pantry-sort')).toBeVisible()
 
@@ -36,12 +42,14 @@ test('user can view, add, edit, and remove pantry items', async ({ page }) => {
 
   const basilRow = page.getByRole('listitem').filter({ hasText: 'basil' })
   await expect(basilRow).toBeVisible()
+  await expect(page.getByTestId('pantry-add-submit')).toHaveText('Add')
 
   // Edit it: open inline edit and change the amount (scoped to the row to
   // avoid the quick-add field that shares the "Amount" label).
   await page.getByRole('button', { name: 'Edit basil' }).click()
   await basilRow.getByLabel('Amount').fill('2')
   await basilRow.getByRole('button', { name: 'Save' }).click()
+  await expect(basilRow.getByRole('button', { name: 'Save' })).toHaveCount(0)
   await expect(basilRow.getByText('2', { exact: true })).toBeVisible()
 
   // Remove it.
@@ -54,17 +62,24 @@ test('category view pill quick-add and remove restores pill', async ({ page }) =
   await page.getByTestId('pantry-view-category').click()
 
   // onions is a common pill in Produce — should not be in seeded pantry.
+  const produceSection = page.locator('section').filter({
+    has: page.getByRole('heading', { name: 'Produce' }),
+  })
+  await produceSection.getByRole('button', { name: 'Quick-add' }).click()
+
   const onionsPill = page.getByTestId('pantry-pill-onions')
   await expect(onionsPill).toBeVisible()
 
   await onionsPill.click()
+  await page.getByRole('button', { name: 'Add 1' }).click()
 
   const onionsRow = page.getByRole('listitem').filter({ hasText: 'onions' })
   await expect(onionsRow).toBeVisible()
-  await expect(onionsPill).toHaveCount(0)
 
   await page.getByRole('button', { name: 'Remove onions' }).click()
   await expect(onionsRow).toHaveCount(0)
+
+  await produceSection.getByRole('button', { name: 'Quick-add' }).click()
   await expect(onionsPill).toBeVisible()
 })
 
