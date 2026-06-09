@@ -315,6 +315,7 @@ export async function loadMoreRecipes(
   const where: Prisma.RecipeWhereInput = {
     status: 'published',
     deletedAt: null,
+    author: { role: { not: 'test' } },
     ...(filters.cuisine ? { cuisine: filters.cuisine } : {}),
     ...(filters.dietary ? { dietaryRestrictions: { has: filters.dietary } } : {}),
     ...(filters.tag ? { tags: { some: { tag: { slug: filters.tag } } } } : {}),

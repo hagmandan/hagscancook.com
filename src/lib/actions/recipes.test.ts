@@ -251,6 +251,20 @@ describe('loadMoreRecipes', () => {
       }),
     )
   })
+
+  it('excludes recipes authored by test-role users', async () => {
+    mockFindMany.mockResolvedValue([])
+
+    await loadMoreRecipes('abc', {})
+
+    expect(mockFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          author: { role: { not: 'test' } },
+        }),
+      }),
+    )
+  })
 })
 
 describe('updateRecipe', () => {
