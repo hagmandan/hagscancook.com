@@ -1,6 +1,6 @@
 // src/components/recipe-form/GuidedMode.test.tsx
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
@@ -239,7 +239,9 @@ describe('GuidedMode', () => {
     it('shows a validation error when title is empty on submit', async () => {
       const user = userEvent.setup()
       renderGuidedMode()
-      await user.click(screen.getByRole('button', { name: 'Save' }))
+      await act(async () => {
+        await user.click(screen.getByRole('button', { name: 'Save' }))
+      })
       await waitFor(() =>
         expect(screen.getByText('Title is required')).toBeInTheDocument()
       )
