@@ -1,0 +1,110 @@
+'use client'
+
+import Link from 'next/link'
+import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
+import { useAuth } from './Providers'
+import styles from './MobileMenu.module.css'
+
+export function MobileMenu() {
+  const [open, setOpen] = useState(false)
+  const { user, loading, logout } = useAuth()
+  const pathname = usePathname()
+
+  // Close on route change
+  useEffect(() => { setOpen(false) }, [pathname])
+
+  // Lock body scroll while open
+  useEffect(() => {
+    document.body.style.overflow = open ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [open])
+
+  // Close on Escape
+  useEffect(() => {
+    if (!open) return
+    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') setOpen(false) }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [open])
+
+  return (
+    <>
+      <button
+        type="button"
+        className={styles.hamburger}
+        aria-label={open ? 'Close menu' : 'Open menu'}
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <span />
+        <span />
+        <span />
+      </button>
+
+      {open && (
+        <>
+          <div
+            className={styles.backdrop}
+            data-testid="mobile-backdrop"
+            onClick={() => setOpen(false)}
+            aria-hidden="true"
+          />
+          <div
+            className={styles.drawer}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Navigation menu"
+          >
+            {!loading && user && (
+              <div className={styles.drawerUser}>
+                {user.photoURL ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={user.photoURL}
+                    alt={user.displayName ?? 'User avatar'}
+                    className={styles.drawerAvatar}
+                    width={36}
+                    height={36}
+                  />
+                ) : (
+                  <span className={styles.drawerAvatarFallback}>
+                    {(user.displayName ?? user.email ?? 'U')[0].toUpperCase()}
+                  </span>
+                )}
+                <span className={styles.drawerName}>{user.displayName}</span>
+              </div>
+            )}
+
+            <nav>
+              <Link href="/recipes" className={styles.drawerLink}>Recipes</Link>
+              {!loading && user && (
+                <>
+                  <Link href="/my-recipes" className={styles.drawerLink}>My Recipes</Link>
+                  <Link href="/pantry" className={styles.drawerLink}>My Pantry</Link>
+                </>
+              )}
+            </nav>
+
+            <div className={styles.drawerDivider} />
+
+            {!loading && user ? (
+              <button
+                type="button"
+                className={styles.drawerLink}
+                onClick={() => { setOpen(false); void logout() }}
+              >
+                Sign out
+              </button>
+            ) : (
+              <>
+                <Link href="/login" className={styles.drawerLink}>Sign in</Link>
+                <Link href="/signup" className={styles.drawerLink}>Sign up</Link>
+              </>
+            )}
+          </div>
+        </>
+      )}
+    </>
+  )
+}
