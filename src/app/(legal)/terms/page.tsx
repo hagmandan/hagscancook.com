@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   description: 'Terms of Service for hags can cook.',
 }
 
-const UPDATED = 'June 1, 2026'
+const UPDATED = 'June 9, 2026'
 
 export default function TermsPage() {
   return (
