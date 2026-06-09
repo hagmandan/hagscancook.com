@@ -1,12 +1,11 @@
 // src/components/recipe-form/RecipeForm.test.tsx
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { act, render, screen, waitFor } from '@testing-library/react'
+import { act, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { createRecipe, updateRecipe } from '@/lib/actions/recipes'
 import { useToast } from '@/lib/toast'
-import type { RecipeFormValues } from '@/lib/schemas/recipe'
 
 // ── CSS module mocks ──────────────────────────────────────────────────────────
 vi.mock('./RecipeForm.module.css', () => ({ default: {} }))
@@ -66,52 +65,25 @@ vi.mock('@dnd-kit/utilities')
 
 // ── Import component under test (after all vi.mock calls) ─────────────────────
 import { RecipeForm } from './RecipeForm'
-
-// ── Shared test data ──────────────────────────────────────────────────────────
-const defaultTags = [{ id: 'tag-1', name: 'Dinner' }]
-const defaultIngredientTypes = [{ id: 'type-1', name: 'Produce' }]
-
-const validForm: Partial<RecipeFormValues> = {
-  title: 'Lemon Pasta',
-  description: 'A bright weeknight pasta.',
-  ingredients: [{ ingredientName: 'pasta', quantity: '1', unit: 'lb', preparation: '', groupLabel: '', typeId: '' }],
-  steps: [{ content: 'Boil the pasta.' }],
-}
-
-const mockPush = vi.fn()
-const mockToastError = vi.fn()
-
-function renderForm(overrides: Partial<React.ComponentProps<typeof RecipeForm>> = {}) {
-  return render(
-    <RecipeForm
-      tags={defaultTags}
-      ingredientTypes={defaultIngredientTypes}
-      {...overrides}
-    />
-  )
-}
+import { renderRecipeForm, setupRecipeFormMocks, mockPush, mockToastError } from '@/test-utils/render-recipe-form'
+import { defaultTags, defaultIngredientTypes, validRecipeForm } from '@/test-utils/fixtures'
 
 beforeEach(() => {
   vi.clearAllMocks()
-  vi.mocked(useSearchParams).mockReturnValue({ get: vi.fn().mockReturnValue(null) } as never)
-  vi.mocked(useRouter).mockReturnValue({ push: mockPush } as never)
-  vi.mocked(usePathname).mockReturnValue('/recipes/new')
-  vi.mocked(useToast).mockReturnValue({ error: mockToastError, success: vi.fn() } as never)
-  vi.mocked(createRecipe).mockResolvedValue({ slug: 'test-slug' })
-  vi.mocked(updateRecipe).mockResolvedValue({ slug: 'test-slug' })
+  setupRecipeFormMocks()
 })
 
 describe('RecipeForm', () => {
   describe('mode rendering', () => {
     it('renders chef mode by default when no mode param', () => {
-      renderForm()
+      renderRecipeForm()
       expect(screen.getByTestId('recipe-title')).toBeInTheDocument()
       expect(screen.queryByRole('tab', { name: 'About' })).not.toBeInTheDocument()
     })
 
     it('renders guided mode when ?mode=guided', () => {
       vi.mocked(useSearchParams).mockReturnValue({ get: vi.fn().mockReturnValue('guided') } as never)
-      renderForm()
+      renderRecipeForm()
       expect(screen.getByRole('tab', { name: 'About' })).toBeInTheDocument()
     })
   })
@@ -119,7 +91,7 @@ describe('RecipeForm', () => {
   describe('mode switch preserves form state', () => {
     it('retains typed values when switching from chef to guided', async () => {
       const user = userEvent.setup()
-      const { rerender } = renderForm()
+      const { rerender } = renderRecipeForm()
 
       await user.type(screen.getByTestId('recipe-title'), 'My Cake')
 
@@ -135,7 +107,7 @@ describe('RecipeForm', () => {
   describe('create flow', () => {
     it('calls createRecipe with publish=false and navigates to the returned slug', async () => {
       const user = userEvent.setup()
-      renderForm({ initialValues: validForm })
+      renderRecipeForm({ initialValues: validRecipeForm })
 
       await user.click(screen.getByRole('button', { name: 'Save' }))
 
@@ -151,7 +123,7 @@ describe('RecipeForm', () => {
 
     it('calls createRecipe with publish=true when Save and Publish clicked', async () => {
       const user = userEvent.setup()
-      renderForm({ initialValues: validForm })
+      renderRecipeForm({ initialValues: validRecipeForm })
 
       await user.click(screen.getByRole('button', { name: 'Save and Publish' }))
 
@@ -165,7 +137,7 @@ describe('RecipeForm', () => {
   describe('edit flow', () => {
     it('calls updateRecipe instead of createRecipe when recipeId is provided', async () => {
       const user = userEvent.setup()
-      renderForm({ initialValues: validForm, recipeId: 'recipe-123' })
+      renderRecipeForm({ initialValues: validRecipeForm, recipeId: 'recipe-123' })
 
       await user.click(screen.getByRole('button', { name: 'Save' }))
 
@@ -180,7 +152,7 @@ describe('RecipeForm', () => {
     it('shows error toast and does not navigate when action returns an error', async () => {
       vi.mocked(createRecipe).mockResolvedValue({ error: 'Something went wrong' })
       const user = userEvent.setup()
-      renderForm({ initialValues: validForm })
+      renderRecipeForm({ initialValues: validRecipeForm })
 
       await user.click(screen.getByRole('button', { name: 'Save' }))
 
@@ -198,7 +170,7 @@ describe('RecipeForm', () => {
         new Promise((res) => { resolveAction = res })
       )
       const user = userEvent.setup()
-      renderForm({ initialValues: validForm })
+      renderRecipeForm({ initialValues: validRecipeForm })
 
       await user.click(screen.getByRole('button', { name: 'Save' }))
 

@@ -1,10 +1,8 @@
 // src/components/recipe-form/GuidedMode.test.tsx
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { act, render, screen, waitFor } from '@testing-library/react'
+import { act, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
-import { useSearchParams, useRouter, usePathname } from 'next/navigation'
-import { useToast } from '@/lib/toast'
 import { useTitleAvailability } from '@/lib/hooks/useTitleAvailability'
 
 // ── CSS module mocks ──────────────────────────────────────────────────────────
@@ -64,36 +62,22 @@ vi.mock('@dnd-kit/sortable')
 vi.mock('@dnd-kit/utilities')
 
 // ── Import component under test (after all vi.mock calls) ─────────────────────
-import { RecipeForm } from './RecipeForm'
-
-// ── Shared test data ──────────────────────────────────────────────────────────
-const defaultTags = [{ id: 'tag-1', name: 'Dinner' }]
-const defaultIngredientTypes = [{ id: 'type-1', name: 'Produce' }]
-
-function renderGuidedMode(overrides: Partial<React.ComponentProps<typeof RecipeForm>> = {}) {
-  return render(
-    <RecipeForm tags={defaultTags} ingredientTypes={defaultIngredientTypes} {...overrides} />
-  )
-}
+import { renderRecipeForm, setupRecipeFormMocks } from '@/test-utils/render-recipe-form'
 
 beforeEach(() => {
   vi.clearAllMocks()
-  vi.mocked(useSearchParams).mockReturnValue({ get: vi.fn().mockReturnValue('guided') } as never)
-  vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as never)
-  vi.mocked(usePathname).mockReturnValue('/recipes/new')
-  vi.mocked(useToast).mockReturnValue({ error: vi.fn(), success: vi.fn() } as never)
-  vi.mocked(useTitleAvailability).mockReturnValue({ taken: false })
+  setupRecipeFormMocks('guided')
 })
 
 describe('GuidedMode', () => {
   describe('initial state', () => {
     it('activates the About tab by default', () => {
-      renderGuidedMode()
+      renderRecipeForm({ mode: 'guided' })
       expect(screen.getByRole('tab', { name: 'About' })).toHaveAttribute('aria-selected', 'true')
     })
 
     it('shows 20% progress on the first tab', () => {
-      renderGuidedMode()
+      renderRecipeForm({ mode: 'guided' })
       expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '20')
     })
   })
@@ -101,7 +85,7 @@ describe('GuidedMode', () => {
   describe('tab navigation', () => {
     it('activates a tab and updates the progress bar when clicked', async () => {
       const user = userEvent.setup()
-      renderGuidedMode()
+      renderRecipeForm({ mode: 'guided' })
       await user.click(screen.getByRole('tab', { name: 'Details' }))
       expect(screen.getByRole('tab', { name: 'Details' })).toHaveAttribute('aria-selected', 'true')
       expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '40')
@@ -109,7 +93,7 @@ describe('GuidedMode', () => {
 
     it('advances through all five tabs', async () => {
       const user = userEvent.setup()
-      renderGuidedMode()
+      renderRecipeForm({ mode: 'guided' })
       const tabs = [
         { name: 'Details', progress: '40' },
         { name: 'Ingredients', progress: '60' },
@@ -126,21 +110,21 @@ describe('GuidedMode', () => {
 
   describe('Next / Back navigation buttons', () => {
     it('shows "Details →" and no Back on the first tab', () => {
-      renderGuidedMode()
+      renderRecipeForm({ mode: 'guided' })
       expect(screen.getByRole('button', { name: 'Details →' })).toBeInTheDocument()
       expect(screen.queryByRole('button', { name: /←/ })).toBeNull()
     })
 
     it('advances to the next tab when Next is clicked', async () => {
       const user = userEvent.setup()
-      renderGuidedMode()
+      renderRecipeForm({ mode: 'guided' })
       await user.click(screen.getByRole('button', { name: 'Details →' }))
       expect(screen.getByRole('tab', { name: 'Details' })).toHaveAttribute('aria-selected', 'true')
     })
 
     it('returns to the previous tab when Back is clicked', async () => {
       const user = userEvent.setup()
-      renderGuidedMode()
+      renderRecipeForm({ mode: 'guided' })
       await user.click(screen.getByRole('tab', { name: 'Details' }))
       await user.click(screen.getByRole('button', { name: '← About' }))
       expect(screen.getByRole('tab', { name: 'About' })).toHaveAttribute('aria-selected', 'true')
@@ -148,7 +132,7 @@ describe('GuidedMode', () => {
 
     it('shows "← Steps" and no Next on the last tab', async () => {
       const user = userEvent.setup()
-      renderGuidedMode()
+      renderRecipeForm({ mode: 'guided' })
       await user.click(screen.getByRole('tab', { name: 'Preview' }))
       expect(screen.getByRole('button', { name: '← Steps' })).toBeInTheDocument()
       expect(screen.queryByRole('button', { name: /→/ })).toBeNull()
@@ -157,21 +141,21 @@ describe('GuidedMode', () => {
 
   describe('About tab', () => {
     it('renders title input and description textarea', () => {
-      renderGuidedMode()
+      renderRecipeForm({ mode: 'guided' })
       expect(screen.getByTestId('recipe-title')).toBeInTheDocument()
       expect(screen.getByTestId('recipe-description')).toBeInTheDocument()
     })
 
     it('updates the char counter as the title is typed', async () => {
       const user = userEvent.setup()
-      renderGuidedMode()
+      renderRecipeForm({ mode: 'guided' })
       await user.type(screen.getByTestId('recipe-title'), 'Soup')
       expect(screen.getByText(/4\s*\/\s*\d+/)).toBeInTheDocument()
     })
 
     it('shows a validation error when title is empty on submit', async () => {
       const user = userEvent.setup()
-      renderGuidedMode()
+      renderRecipeForm({ mode: 'guided' })
       await act(async () => {
         await user.click(screen.getByRole('button', { name: 'Save' }))
       })
@@ -182,13 +166,13 @@ describe('GuidedMode', () => {
 
     it('shows a duplicate-title warning when useTitleAvailability returns taken=true', () => {
       vi.mocked(useTitleAvailability).mockReturnValue({ taken: true })
-      renderGuidedMode({ initialValues: { title: 'Existing Recipe' } })
+      renderRecipeForm({ mode: 'guided', initialValues: { title: 'Existing Recipe' } })
       expect(screen.getByText(/Another recipe with this title exists/)).toBeInTheDocument()
     })
 
     it('disables the upload button until consent is checked', async () => {
       const user = userEvent.setup()
-      renderGuidedMode()
+      renderRecipeForm({ mode: 'guided' })
       const uploadButton = screen.getByRole('button', { name: /upload photo/i })
       expect(uploadButton).toBeDisabled()
       const checkbox = screen.getByLabelText(/I confirm/)
@@ -197,19 +181,19 @@ describe('GuidedMode', () => {
     })
 
     it('shows pending-approval banner when coverImageStatus is pending_approval', () => {
-      renderGuidedMode({ coverImageStatus: 'pending_approval' })
+      renderRecipeForm({ mode: 'guided', coverImageStatus: 'pending_approval' })
       expect(screen.getByText(/Image under review/)).toBeInTheDocument()
     })
 
     it('shows rejection banner when coverImageStatus is rejected', () => {
-      renderGuidedMode({ coverImageStatus: 'rejected' })
+      renderRecipeForm({ mode: 'guided', coverImageStatus: 'rejected' })
       expect(screen.getByText(/Image rejected/)).toBeInTheDocument()
     })
   })
 
   describe('Details tab', () => {
     beforeEach(async () => {
-      renderGuidedMode()
+      renderRecipeForm({ mode: 'guided' })
       await userEvent.setup().click(screen.getByRole('tab', { name: 'Details' }))
     })
 
@@ -237,7 +221,7 @@ describe('GuidedMode', () => {
   describe('Ingredients tab', () => {
     it('renders the IngredientsField when the Ingredients tab is active', async () => {
       const user = userEvent.setup()
-      renderGuidedMode()
+      renderRecipeForm({ mode: 'guided' })
       await user.click(screen.getByRole('tab', { name: 'Ingredients' }))
       expect(screen.getByText(/Add your ingredients/)).toBeInTheDocument()
     })
@@ -246,7 +230,7 @@ describe('GuidedMode', () => {
   describe('Steps tab', () => {
     it('renders the StepsField when the Steps tab is active', async () => {
       const user = userEvent.setup()
-      renderGuidedMode()
+      renderRecipeForm({ mode: 'guided' })
       await user.click(screen.getByRole('tab', { name: 'Steps' }))
       expect(screen.getByText(/Walk cooks through each step/)).toBeInTheDocument()
     })
@@ -255,7 +239,7 @@ describe('GuidedMode', () => {
   describe('Preview tab', () => {
     it('shows "Untitled recipe" when title is blank', async () => {
       const user = userEvent.setup()
-      renderGuidedMode()
+      renderRecipeForm({ mode: 'guided' })
       await user.click(screen.getByRole('tab', { name: 'Preview' }))
       // The preview h2 contains "Untitled recipe" (the header span may also show it)
       expect(screen.getByRole('heading', { name: 'Untitled recipe' })).toBeInTheDocument()
@@ -263,7 +247,8 @@ describe('GuidedMode', () => {
 
     it('reflects the live title, description, and timing from earlier tabs', async () => {
       const user = userEvent.setup()
-      renderGuidedMode({
+      renderRecipeForm({
+        mode: 'guided',
         initialValues: {
           title: 'My Soup',
           description: 'A warming bowl.',
