@@ -33,6 +33,13 @@ enum RecipeStatus {
   published
 }
 
+/** Moderation state of a recipe's cover image. */
+enum CoverImageStatus {
+  pending_approval
+  approved
+  rejected
+}
+
 // ---------------------------------------------------------------------------
 // Users
 // ---------------------------------------------------------------------------
@@ -69,6 +76,7 @@ model Recipe {
   title       String
   description String
   coverImageUrl String?     @map("cover_image_url")
+  coverImageStatus CoverImageStatus? @map("cover_image_status")
   prepTimeMins  Int?        @map("prep_time_mins")
   cookTimeMins  Int?        @map("cook_time_mins")
   servings      Int?
