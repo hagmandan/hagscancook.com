@@ -151,3 +151,9 @@
   background-color: var(--color-border);
   margin: 0.25rem 0;
 }
+
+@media (max-width: 639px) {
+  .displayName {
+    display: none;
+  }
+}
