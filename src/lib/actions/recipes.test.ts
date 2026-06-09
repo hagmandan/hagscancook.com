@@ -175,6 +175,35 @@ describe('createRecipe', () => {
       }),
     )
   })
+
+  it('sets coverImageStatus to pending_approval when a cover image is provided', async () => {
+    await createRecipe({
+      ...validRecipeForm,
+      coverImageUrl: 'https://storage.googleapis.com/bucket/covers/uid/123.jpg',
+    })
+
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          coverImageUrl: 'https://storage.googleapis.com/bucket/covers/uid/123.jpg',
+          coverImageStatus: 'pending_approval',
+        }),
+      })
+    )
+  })
+
+  it('sets coverImageStatus to null when no cover image provided', async () => {
+    await createRecipe(validRecipeForm) // coverImageUrl: ''
+
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          coverImageUrl: null,
+          coverImageStatus: null,
+        }),
+      })
+    )
+  })
 })
 
 describe('loadMoreRecipes', () => {
@@ -269,7 +298,7 @@ describe('loadMoreRecipes', () => {
 
 describe('updateRecipe', () => {
   it('blocks edits by non-authors', async () => {
-    mockFindUnique.mockResolvedValue({ authorId: 'other-user', slug: 'old-slug', title: 'Old Title' })
+    mockFindUnique.mockResolvedValue({ authorId: 'other-user', slug: 'old-slug', title: 'Old Title', coverImageUrl: null })
 
     const result = await updateRecipe('recipe-1', validRecipeForm)
 
@@ -279,7 +308,7 @@ describe('updateRecipe', () => {
   })
 
   it('updates a recipe and regenerates the slug when title changes', async () => {
-    mockFindUnique.mockResolvedValue({ authorId: 'user-1', slug: 'old-slug', title: 'Old Title' })
+    mockFindUnique.mockResolvedValue({ authorId: 'user-1', slug: 'old-slug', title: 'Old Title', coverImageUrl: null })
     mockRecipeUpdate.mockReturnValue({ query: 'update-recipe' } as never)
 
     const result = await updateRecipe('recipe-1', validRecipeForm, true)
@@ -314,6 +343,65 @@ describe('updateRecipe', () => {
       { query: 'update-recipe' },
     ])
     expect(mockRevalidatePath).toHaveBeenCalledWith('/my-recipes')
+  })
+
+  it('sets coverImageStatus to pending_approval when a new image URL is saved', async () => {
+    mockFindUnique.mockResolvedValue({
+      authorId: 'user-1',
+      slug: 'lemon-pasta',
+      title: 'Lemon Pasta',
+      coverImageUrl: null,
+    })
+    mockRecipeUpdate.mockReturnValue({ query: 'update-recipe' } as never)
+
+    await updateRecipe('recipe-1', {
+      ...validRecipeForm,
+      coverImageUrl: 'https://storage.googleapis.com/bucket/covers/uid/456.jpg',
+    })
+
+    expect(mockRecipeUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ coverImageStatus: 'pending_approval' }),
+      })
+    )
+  })
+
+  it('preserves image status when the URL is unchanged on save', async () => {
+    const existingUrl = 'https://storage.googleapis.com/bucket/covers/uid/456.jpg'
+    mockFindUnique.mockResolvedValue({
+      authorId: 'user-1',
+      slug: 'lemon-pasta',
+      title: 'Lemon Pasta',
+      coverImageUrl: existingUrl,
+    })
+    mockRecipeUpdate.mockReturnValue({ query: 'update-recipe' } as never)
+
+    await updateRecipe('recipe-1', { ...validRecipeForm, coverImageUrl: existingUrl })
+
+    // coverImageStatus must NOT be in the update payload — status is preserved
+    expect(mockRecipeUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.not.objectContaining({ coverImageStatus: expect.anything() }),
+      })
+    )
+  })
+
+  it('clears image status when image is removed', async () => {
+    mockFindUnique.mockResolvedValue({
+      authorId: 'user-1',
+      slug: 'lemon-pasta',
+      title: 'Lemon Pasta',
+      coverImageUrl: 'https://storage.googleapis.com/bucket/covers/uid/456.jpg',
+    })
+    mockRecipeUpdate.mockReturnValue({ query: 'update-recipe' } as never)
+
+    await updateRecipe('recipe-1', { ...validRecipeForm, coverImageUrl: '' })
+
+    expect(mockRecipeUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ coverImageStatus: null }),
+      })
+    )
   })
 })
 

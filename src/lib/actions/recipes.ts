@@ -66,6 +66,7 @@ export async function createRecipe(
         title: data.title,
         description: data.description,
         coverImageUrl: data.coverImageUrl || null,
+        coverImageStatus: data.coverImageUrl ? 'pending_approval' : null,
         prepTimeMins: data.prepTimeMins ?? null,
         cookTimeMins: data.cookTimeMins ?? null,
         servings: data.servings ?? null,
@@ -140,7 +141,7 @@ export async function updateRecipe(
 
   const existing = await db.recipe.findUnique({
     where: { id: recipeId },
-    select: { authorId: true, slug: true, title: true },
+    select: { authorId: true, slug: true, title: true, coverImageUrl: true },
   })
 
   if (!existing) return { error: 'Recipe not found' }
@@ -161,6 +162,12 @@ export async function updateRecipe(
       ? await generateUniqueSlug(data.title, recipeId)
       : existing.slug
 
+  const newImageUrl = data.coverImageUrl || null
+  const imageStatusUpdate: { coverImageStatus?: 'pending_approval' | null } = {}
+  if (newImageUrl !== existing.coverImageUrl) {
+    imageStatusUpdate.coverImageStatus = newImageUrl ? 'pending_approval' : null
+  }
+
   const ingredientIds = await Promise.all(
     data.ingredients.map((i) => resolveIngredient(i.ingredientName, i.typeId))
   )
@@ -178,7 +185,8 @@ export async function updateRecipe(
           slug,
           title: data.title,
           description: data.description,
-          coverImageUrl: data.coverImageUrl || null,
+          coverImageUrl: newImageUrl,
+          ...imageStatusUpdate,
           prepTimeMins: data.prepTimeMins ?? null,
           cookTimeMins: data.cookTimeMins ?? null,
           servings: data.servings ?? null,
