@@ -20,6 +20,13 @@ const E2E_USER = {
   firebaseUid: 'e2e-user',
   email: 'e2e-user@hagscancook.test',
   displayName: 'E2E Cook',
+  role: 'test' as const,
+}
+
+const PAGINATION_USER = {
+  firebaseUid: 'e2e-pagination-user',
+  email: 'e2e-pagination-user@hagscancook.test',
+  displayName: 'E2E Pagination Cook',
   role: 'user' as const,
 }
 
@@ -263,11 +270,15 @@ async function upsertE2EPantry() {
 }
 
 async function upsertPaginationRecipes() {
-  const e2eUser = await prisma.user.findUnique({
-    where: { email: 'e2e-user@hagscancook.test' },
-    select: { id: true },
+  const paginationUser = await prisma.user.upsert({
+    where: { firebaseUid: PAGINATION_USER.firebaseUid },
+    update: {
+      email: PAGINATION_USER.email,
+      displayName: PAGINATION_USER.displayName,
+      role: PAGINATION_USER.role,
+    },
+    create: PAGINATION_USER,
   })
-  if (!e2eUser) return
 
   for (let i = 1; i <= 25; i++) {
     await prisma.recipe.upsert({
@@ -278,7 +289,7 @@ async function upsertPaginationRecipes() {
         title: `Pagination Test Recipe ${i}`,
         description: `A simple recipe for pagination testing (${i}).`,
         status: 'published',
-        authorId: e2eUser.id,
+        authorId: paginationUser.id,
       },
     })
   }
