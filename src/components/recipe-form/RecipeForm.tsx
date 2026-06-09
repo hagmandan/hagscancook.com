@@ -12,6 +12,7 @@
  * (initialValues populated from the DB).
  */
 
+import { useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useForm, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -70,6 +71,7 @@ export function RecipeForm({ initialValues, recipeId, initialStatus = 'draft', c
   })
 
   const { handleSubmit, formState: { isSubmitting } } = form
+  const [consentGiven, setConsentGiven] = useState(false)
 
   async function onSubmit(data: RecipeFormValues, publish: boolean) {
     const result = recipeId
@@ -103,9 +105,9 @@ export function RecipeForm({ initialValues, recipeId, initialStatus = 'draft', c
       />
 
       {mode === 'guided' ? (
-        <GuidedMode form={form} tags={tags} ingredientTypes={ingredientTypes} recipeId={recipeId} coverImageStatus={coverImageStatus} />
+        <GuidedMode form={form} tags={tags} ingredientTypes={ingredientTypes} recipeId={recipeId} coverImageStatus={coverImageStatus} consentGiven={consentGiven} onConsentChange={setConsentGiven} />
       ) : (
-        <ChefMode form={form} tags={tags} ingredientTypes={ingredientTypes} recipeId={recipeId} coverImageStatus={coverImageStatus} />
+        <ChefMode form={form} tags={tags} ingredientTypes={ingredientTypes} recipeId={recipeId} coverImageStatus={coverImageStatus} consentGiven={consentGiven} onConsentChange={setConsentGiven} />
       )}
     </div>
   )

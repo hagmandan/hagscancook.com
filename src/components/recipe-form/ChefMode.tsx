@@ -21,16 +21,17 @@ interface ChefModeProps {
   ingredientTypes: { id: string; name: string }[]
   recipeId?: string
   coverImageStatus?: 'pending_approval' | 'approved' | 'rejected' | null
+  consentGiven: boolean
+  onConsentChange: (v: boolean) => void
 }
 
 const dietaryOptions = DIETARY_RESTRICTIONS.map((d) => ({ label: d, value: d }))
 const cookingMethodOptions = COOKING_METHODS.map((m) => ({ label: m, value: m }))
 
-export function ChefMode({ form, tags, ingredientTypes, recipeId, coverImageStatus }: ChefModeProps) {
+export function ChefMode({ form, tags, ingredientTypes, recipeId, coverImageStatus, consentGiven, onConsentChange }: ChefModeProps) {
   const { register, watch, setValue, formState: { errors } } = form
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [consentGiven, setConsentGiven] = useState(false)
-  const { isUploading, fileInputRef, handleCoverUpload } = useCoverUpload(setValue)
+  const { isUploading, uploadError, fileInputRef, handleCoverUpload } = useCoverUpload(setValue)
   const coverImageUrl = watch('coverImageUrl')
 
   const title = watch('title')
@@ -95,7 +96,7 @@ export function ChefMode({ form, tags, ingredientTypes, recipeId, coverImageStat
               )}
               <input
                 type="file"
-                accept="image/jpeg,image/png,image/webp"
+                accept="image/jpeg,image/png,image/webp,image/gif"
                 ref={fileInputRef}
                 onChange={handleCoverUpload}
                 className={styles.fileInput}
@@ -106,7 +107,7 @@ export function ChefMode({ form, tags, ingredientTypes, recipeId, coverImageStat
                 <input
                   type="checkbox"
                   checked={consentGiven}
-                  onChange={(e) => setConsentGiven(e.target.checked)}
+                  onChange={(e) => onConsentChange(e.target.checked)}
                 />
                 {' '}I confirm this image is my own and complies with our{' '}
                 <a href="/terms" target="_blank" rel="noopener noreferrer">content guidelines</a>.
@@ -119,6 +120,7 @@ export function ChefMode({ form, tags, ingredientTypes, recipeId, coverImageStat
               >
                 {coverImageUrl ? 'Change photo' : 'Upload photo'}
               </button>
+              {uploadError && <p className={styles.error}>{uploadError}</p>}
             </div>
             {coverImageStatus === 'pending_approval' && (
               <p className={styles.imageStatusPending}>
