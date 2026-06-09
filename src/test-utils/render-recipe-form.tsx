@@ -13,6 +13,7 @@ export type RenderRecipeFormOptions = {
   mode?: 'chef' | 'guided'
   initialValues?: Partial<RecipeFormValues>
   recipeId?: string
+  initialStatus?: 'draft' | 'published'
   coverImageStatus?: 'pending_approval' | 'approved' | 'rejected' | null
   tags?: { id: string; name: string }[]
   ingredientTypes?: { id: string; name: string }[]
@@ -37,18 +38,23 @@ export function renderRecipeForm({
   mode = 'chef',
   initialValues,
   recipeId,
+  initialStatus,
   coverImageStatus,
   tags = defaultTags,
   ingredientTypes = defaultIngredientTypes,
 }: RenderRecipeFormOptions = {}) {
-  // mode is consumed by setupRecipeFormMocks; the component reads it from useSearchParams
-  void mode
+  // Make the mode self-contained — override regardless of what setupRecipeFormMocks set
+  vi.mocked(useSearchParams).mockReturnValue({
+    get: vi.fn().mockReturnValue(mode === 'guided' ? 'guided' : null),
+  } as never)
+
   return render(
     <RecipeForm
       tags={tags}
       ingredientTypes={ingredientTypes}
       initialValues={initialValues}
       recipeId={recipeId}
+      initialStatus={initialStatus}
       coverImageStatus={coverImageStatus}
     />
   )

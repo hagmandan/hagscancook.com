@@ -82,8 +82,7 @@ describe('RecipeForm', () => {
     })
 
     it('renders guided mode when ?mode=guided', () => {
-      vi.mocked(useSearchParams).mockReturnValue({ get: vi.fn().mockReturnValue('guided') } as never)
-      renderRecipeForm()
+      renderRecipeForm({ mode: 'guided' })
       expect(screen.getByRole('tab', { name: 'About' })).toBeInTheDocument()
     })
   })
@@ -97,7 +96,7 @@ describe('RecipeForm', () => {
 
       vi.mocked(useSearchParams).mockReturnValue({ get: vi.fn().mockReturnValue('guided') } as never)
       rerender(
-        <RecipeForm tags={defaultTags} ingredientTypes={defaultIngredientTypes} />
+        <RecipeForm tags={defaultTags} ingredientTypes={defaultIngredientTypes} initialStatus="draft" />
       )
 
       expect(screen.getByTestId('recipe-title')).toHaveValue('My Cake')
