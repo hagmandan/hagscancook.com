@@ -9,6 +9,7 @@ yarn dev          # seed dev DB then start Next.js dev server (Turbopack)
 yarn build        # production build
 yarn lint         # ESLint
 yarn test         # Vitest (unit/component, jsdom)
+yarn test:coverage  # Vitest with coverage report
 yarn test:e2e     # Playwright end-to-end (spins up its own dev server with E2E_TEST_AUTH=1)
 yarn test:e2e:ui  # Playwright with interactive UI
 
@@ -71,6 +72,22 @@ CSS Modules (`*.module.css`) per component alongside global styles in `src/app/g
 ### Secrets
 
 Production secrets (DB credentials, Firebase service account, Sentry token) are stored in **Cloud Secret Manager** and referenced in `apphosting.yaml`. For local dev, copy them to `.env` (already gitignored). `FIREBASE_SERVICE_ACCOUNT_KEY` is a base64-encoded service account JSON.
+
+### TypeScript path alias
+
+`@/` maps to `src/` — all imports use this alias.
+
+### Error monitoring — PII policy
+
+`src/lib/monitoring/errors.ts` wraps Sentry's `captureException`. Always import from there, never directly from `@sentry/nextjs`. The wrapper enforces a strict allowlist: only opaque UUIDs, counts, and feature/operation labels may be attached. Never pass recipe content, ingredient names, user emails, display names, or raw search queries to error context.
+
+### Soft-delete pattern
+
+Recipes are never hard-deleted. `Recipe.deletedAt` is the soft-delete signal. All queries against the `Recipe` table must include `where: { deletedAt: null }` unless intentionally fetching deleted records (e.g., admin audit views).
+
+### Canonical ingredient resolution
+
+Use `resolveIngredient(name, typeId?)` from `src/lib/ingredients.ts` whenever a feature needs to reference or create an ingredient. It normalises to lowercase, deduplicates case-insensitively, and defaults new ingredients to the "Produce" type. Do not write raw `db.ingredient.upsert` calls at the feature level.
 
 ### Key directories
 
