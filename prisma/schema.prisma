@@ -24,6 +24,7 @@ enum Role {
   user
   chef
   admin
+  test
 }
 
 /** Publication state of a recipe. */
