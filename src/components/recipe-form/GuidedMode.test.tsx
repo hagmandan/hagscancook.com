@@ -56,56 +56,8 @@ vi.mock('./useCoverUpload', () => ({
 }))
 
 // ── Third-party UI mocks ──────────────────────────────────────────────────────
-vi.mock('react-select', async () => {
-  const React = await vi.importActual<typeof import('react')>('react')
-  type Option = { label: string; value: string }
-  function MockSelect({ inputId, options, value, onChange, placeholder }: {
-    inputId?: string; options: Option[]; value: Option[]; onChange: (v: Option[]) => void; placeholder?: string
-    components?: unknown
-  }) {
-    return React.createElement('div', null,
-      React.createElement('select', {
-        'aria-label': inputId ?? 'multi-select', id: inputId, multiple: true,
-        value: value.map((o) => o.value),
-        onChange: (e: React.ChangeEvent<HTMLSelectElement>) => {
-          const selected = Array.from(e.currentTarget.selectedOptions).map((o) => o.value)
-          onChange(options.filter((o) => selected.includes(o.value)))
-        },
-      }, options.map((o) => React.createElement('option', { key: o.value, value: o.value }, o.label))),
-      React.createElement('span', null, placeholder)
-    )
-  }
-  return { default: MockSelect, components: { MultiValueLabel: ({ children }: { children: ReactNode }) => React.createElement(React.Fragment, null, children) } }
-})
-
-vi.mock('react-select/creatable', async () => {
-  const React = await vi.importActual<typeof import('react')>('react')
-  type Option = { label: string; value: string }
-  function MockCreatable({ inputId, options, value, onChange, placeholder, formatCreateLabel }: {
-    inputId?: string; options: Option[]; value: Option[]; onChange: (v: Option[]) => void; placeholder?: string; formatCreateLabel: (s: string) => string
-  }) {
-    const [input, setInput] = React.useState('')
-    return React.createElement('div', null,
-      React.createElement('select', {
-        'aria-label': inputId ?? 'creatable-select', id: inputId, multiple: true,
-        value: value.map((o) => o.value),
-        onChange: (e: React.ChangeEvent<HTMLSelectElement>) => {
-          const selected = Array.from(e.currentTarget.selectedOptions).map((o) => o.value)
-          onChange(options.filter((o) => selected.includes(o.value)))
-        },
-      }, options.map((o) => React.createElement('option', { key: o.value, value: o.value }, o.label))),
-      React.createElement('input', {
-        'aria-label': `${inputId ?? 'creatable-select'} input`, value: input, placeholder,
-        onChange: (e: React.ChangeEvent<HTMLInputElement>) => setInput(e.currentTarget.value),
-        onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => {
-          if (e.key === 'Enter' && input) { e.preventDefault(); onChange([...value, { label: input, value: input }]) }
-        },
-      }),
-      React.createElement('span', null, input ? formatCreateLabel(input) : placeholder)
-    )
-  }
-  return { default: MockCreatable }
-})
+vi.mock('react-select')
+vi.mock('react-select/creatable')
 
 vi.mock('@dnd-kit/core', () => ({
   DndContext: ({ children }: { children: ReactNode }) => <div>{children}</div>,
