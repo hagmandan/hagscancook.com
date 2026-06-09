@@ -4,34 +4,10 @@ import userEvent from '@testing-library/user-event'
 import { useForm } from 'react-hook-form'
 import { StepsField } from './StepsField'
 import type { RecipeFormValues } from '@/lib/schemas/recipe'
-import type { ReactNode } from 'react'
 
-vi.mock('@dnd-kit/core', () => ({
-  DndContext: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  closestCenter: vi.fn(),
-  KeyboardSensor: vi.fn(),
-  PointerSensor: vi.fn(),
-  useSensor: vi.fn(),
-  useSensors: vi.fn(() => []),
-}))
-
-vi.mock('@dnd-kit/sortable', () => ({
-  SortableContext: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  sortableKeyboardCoordinates: vi.fn(),
-  verticalListSortingStrategy: vi.fn(),
-  useSortable: vi.fn(() => ({
-    attributes: {},
-    listeners: {},
-    setNodeRef: vi.fn(),
-    transform: null,
-    transition: undefined,
-    isDragging: false,
-  })),
-}))
-
-vi.mock('@dnd-kit/utilities', () => ({
-  CSS: { Transform: { toString: vi.fn(() => undefined) } },
-}))
+vi.mock('@dnd-kit/core')
+vi.mock('@dnd-kit/sortable')
+vi.mock('@dnd-kit/utilities')
 
 vi.mock('./StepsField.module.css', () => ({
   default: {
