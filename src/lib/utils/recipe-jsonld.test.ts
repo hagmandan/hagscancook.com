@@ -146,4 +146,23 @@ describe('toRecipeJsonLd', () => {
     expect(jsonLd).not.toHaveProperty('keywords')
     expect(jsonLd).not.toHaveProperty('isBasedOn')
   })
+
+  it('includes source URL without attribution when source name is absent', () => {
+    const jsonLd = toRecipeJsonLd(
+      {
+        ...baseRecipe,
+        sourceUrl: 'https://example.com/source',
+        sourceAttribution: null,
+      },
+      'https://hagscancook.com/recipes/lemon-pasta',
+    )
+
+    expect(jsonLd).toMatchObject({
+      isBasedOn: {
+        '@type': 'WebPage',
+        url: 'https://example.com/source',
+      },
+    })
+    expect(jsonLd.isBasedOn).not.toHaveProperty('name')
+  })
 })

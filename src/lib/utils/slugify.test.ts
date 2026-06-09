@@ -81,4 +81,14 @@ describe('generateUniqueSlug', () => {
 
     await expect(generateUniqueSlug('!!!')).resolves.toBe('recipe')
   })
+
+  it('uses a timestamp fallback when numeric suffixes are exhausted', async () => {
+    const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(1234567890)
+    mockFindUnique.mockResolvedValue({ id: 'existing-recipe' })
+
+    await expect(generateUniqueSlug('Lemon Pasta')).resolves.toBe('lemon-pasta-1234567890')
+
+    expect(mockFindUnique).toHaveBeenCalledTimes(999)
+    nowSpy.mockRestore()
+  })
 })
