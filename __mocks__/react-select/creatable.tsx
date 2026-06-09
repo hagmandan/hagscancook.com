@@ -8,7 +8,7 @@ type CreatableProps = {
   value: Option[]
   onChange: (value: Option[]) => void
   placeholder?: string
-  formatCreateLabel: (input: string) => string
+  formatCreateLabel?: (input: string) => string
 }
 
 function MockCreatableSelect({
@@ -20,7 +20,9 @@ function MockCreatableSelect({
   formatCreateLabel,
 }: CreatableProps) {
   const [inputValue, setInputValue] = React.useState('')
-  const createLabel = inputValue ? formatCreateLabel(inputValue) : placeholder
+  const createLabel = inputValue
+    ? (formatCreateLabel ?? ((v: string) => `Create "${v}"`))(inputValue)
+    : placeholder
 
   return React.createElement(
     'div',
