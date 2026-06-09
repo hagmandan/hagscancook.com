@@ -35,6 +35,7 @@ async function getRecipes(filters: RecipeFilters): Promise<{
   const where: Prisma.RecipeWhereInput = {
     status: 'published',
     deletedAt: null,
+    author: { role: { not: 'test' } },
   }
 
   if (filters.cuisine) {
