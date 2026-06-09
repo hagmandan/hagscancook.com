@@ -1,6 +1,6 @@
 // src/components/recipe-form/RecipeForm.test.tsx
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
@@ -211,6 +211,7 @@ describe('RecipeForm', () => {
           expect.objectContaining({ title: 'Lemon Pasta' }),
           false
         )
+        expect(updateRecipe).not.toHaveBeenCalled()
         expect(mockPush).toHaveBeenCalledWith('/recipes/test-slug')
       })
     })
@@ -223,6 +224,7 @@ describe('RecipeForm', () => {
 
       await waitFor(() => {
         expect(createRecipe).toHaveBeenCalledWith(expect.any(Object), true)
+        expect(updateRecipe).not.toHaveBeenCalled()
       })
     })
   })
@@ -269,7 +271,7 @@ describe('RecipeForm', () => {
 
       expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
 
-      resolveAction({ slug: 'test-slug' })
+      await act(async () => { resolveAction({ slug: 'test-slug' }) })
       await waitFor(() => expect(mockPush).toHaveBeenCalled())
     })
   })
