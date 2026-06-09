@@ -108,7 +108,9 @@ describe('RecipeForm', () => {
       const user = userEvent.setup()
       renderRecipeForm({ initialValues: validRecipeForm })
 
-      await user.click(screen.getByRole('button', { name: 'Save' }))
+      await act(async () => {
+        await user.click(screen.getByRole('button', { name: 'Save' }))
+      })
 
       await waitFor(() => {
         expect(createRecipe).toHaveBeenCalledWith(
@@ -124,7 +126,9 @@ describe('RecipeForm', () => {
       const user = userEvent.setup()
       renderRecipeForm({ initialValues: validRecipeForm })
 
-      await user.click(screen.getByRole('button', { name: 'Save and Publish' }))
+      await act(async () => {
+        await user.click(screen.getByRole('button', { name: 'Save and Publish' }))
+      })
 
       await waitFor(() => {
         expect(createRecipe).toHaveBeenCalledWith(expect.any(Object), true)
@@ -138,7 +142,9 @@ describe('RecipeForm', () => {
       const user = userEvent.setup()
       renderRecipeForm({ initialValues: validRecipeForm, recipeId: 'recipe-123' })
 
-      await user.click(screen.getByRole('button', { name: 'Save' }))
+      await act(async () => {
+        await user.click(screen.getByRole('button', { name: 'Save' }))
+      })
 
       await waitFor(() => {
         expect(updateRecipe).toHaveBeenCalledWith('recipe-123', expect.any(Object), false)
@@ -153,7 +159,9 @@ describe('RecipeForm', () => {
       const user = userEvent.setup()
       renderRecipeForm({ initialValues: validRecipeForm })
 
-      await user.click(screen.getByRole('button', { name: 'Save' }))
+      await act(async () => {
+        await user.click(screen.getByRole('button', { name: 'Save' }))
+      })
 
       await waitFor(() => {
         expect(mockToastError).toHaveBeenCalledWith('Error', 'Something went wrong')
@@ -171,7 +179,9 @@ describe('RecipeForm', () => {
       const user = userEvent.setup()
       renderRecipeForm({ initialValues: validRecipeForm })
 
-      await user.click(screen.getByRole('button', { name: 'Save' }))
+      await act(async () => {
+        await user.click(screen.getByRole('button', { name: 'Save' }))
+      })
 
       expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
 
