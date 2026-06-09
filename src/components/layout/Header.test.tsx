@@ -28,6 +28,10 @@ vi.mock('./UserMenu', () => ({
   UserMenu: () => <div>User menu</div>,
 }))
 
+vi.mock('./MobileMenu', () => ({
+  MobileMenu: () => <button type="button">Mobile menu</button>,
+}))
+
 vi.mock('./Header.module.css', () => ({
   default: {
     header: 'header',
@@ -50,5 +54,6 @@ describe('Header', () => {
     expect(screen.getByRole('link', { name: 'My Recipes' })).toHaveAttribute('href', '/my-recipes')
     expect(screen.getByRole('button', { name: 'Theme' })).toBeInTheDocument()
     expect(screen.getByText('User menu')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Mobile menu' })).toBeInTheDocument()
   })
 })

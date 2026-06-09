@@ -54,6 +54,7 @@
   background-color: var(--color-surface);
   cursor: pointer;
   transition: border-color 0.15s ease;
+  flex-grow: 1;
 }
 
 @media (width < 640px) {

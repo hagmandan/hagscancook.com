@@ -63,8 +63,7 @@ describe('MobileMenu', () => {
   it('closes drawer when backdrop is clicked', () => {
     render(<MobileMenu />)
     fireEvent.click(screen.getByRole('button', { name: /open menu/i }))
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    fireEvent.click(document.querySelector('[data-testid="mobile-backdrop"]')!)
+    fireEvent.click(screen.getByTestId('mobile-backdrop'))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
@@ -98,8 +97,7 @@ describe('MobileMenu', () => {
     expect(document.body.style.overflow).toBe('')
     fireEvent.click(screen.getByRole('button', { name: /open menu/i }))
     expect(document.body.style.overflow).toBe('hidden')
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    fireEvent.click(document.querySelector('[data-testid="mobile-backdrop"]')!)
+    fireEvent.click(screen.getByTestId('mobile-backdrop'))
     expect(document.body.style.overflow).toBe('')
   })
 })
