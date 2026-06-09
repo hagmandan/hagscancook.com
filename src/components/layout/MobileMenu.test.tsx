@@ -11,6 +11,7 @@ vi.mock('next/link', () => ({
 
 import { MobileMenu } from './MobileMenu'
 import { useAuth } from './Providers'
+import { usePathname } from 'next/navigation'
 
 const mockLogout = vi.fn()
 const authedUser = { displayName: 'Dan', email: 'dan@test.com', photoURL: null }
@@ -80,5 +81,25 @@ describe('MobileMenu', () => {
     expect(btn).toHaveAttribute('aria-expanded', 'false')
     fireEvent.click(btn)
     expect(screen.getByRole('button', { name: /close menu/i })).toHaveAttribute('aria-expanded', 'true')
+  })
+
+  it('closes drawer when pathname changes', () => {
+    vi.mocked(usePathname).mockReturnValue('/')
+    const { rerender } = render(<MobileMenu />)
+    fireEvent.click(screen.getByRole('button', { name: /open menu/i }))
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    vi.mocked(usePathname).mockReturnValue('/recipes')
+    rerender(<MobileMenu />)
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('locks body scroll when drawer is open', () => {
+    render(<MobileMenu />)
+    expect(document.body.style.overflow).toBe('')
+    fireEvent.click(screen.getByRole('button', { name: /open menu/i }))
+    expect(document.body.style.overflow).toBe('hidden')
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    fireEvent.click(document.querySelector('[data-testid="mobile-backdrop"]')!)
+    expect(document.body.style.overflow).toBe('')
   })
 })
