@@ -1,6 +1,6 @@
 // src/components/recipe-form/ChefMode.test.tsx
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
@@ -16,6 +16,7 @@ vi.mock('./StepsField.module.css', () => ({ default: {} }))
 vi.mock('@/components/ui/MultiSelect.module.css', () => ({ default: {} }))
 vi.mock('@/components/ui/UnitSelect.module.css', () => ({ default: {} }))
 vi.mock('@/components/ui/CharCounter.module.css', () => ({ default: {} }))
+vi.mock('./GuidedMode.module.css', () => ({ default: {} }))
 
 // ── Next.js mocks ─────────────────────────────────────────────────────────────
 vi.mock('next/navigation', () => ({
@@ -173,7 +174,9 @@ describe('ChefMode', () => {
       const user = userEvent.setup()
       renderChefMode()
       await user.click(screen.getByRole('button', { name: 'Save' }))
-      expect(await screen.findByText('Title is required')).toBeInTheDocument()
+      await waitFor(() =>
+        expect(screen.getByText('Title is required')).toBeInTheDocument()
+      )
     })
 
     it('shows a duplicate-title warning when useTitleAvailability returns taken=true', () => {
