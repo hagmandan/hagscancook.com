@@ -3,14 +3,16 @@
  *
  * Rendered as a Server Component in `layout.tsx`. The user menu (sign in /
  * sign out / avatar) is a Client Component island (`<UserMenu>`) that reads
- * from `AuthContext` via the `useAuth()` hook.
+ * from `AuthContext` via the `useAuth()` hook. MobileMenu is a Client
+ * Component that owns the hamburger + slide-out drawer on narrow viewports.
  */
 
 import Link from 'next/link'
 import styles from './Header.module.css'
 import { UserMenu } from './UserMenu'
-import { PantryNavLink } from './PantryNavLink'
+import { AuthNavLinks } from './AuthNavLinks'
 import { ThemeToggle } from './ThemeToggle'
+import { MobileMenu } from './MobileMenu'
 
 export function Header() {
   return (
@@ -21,14 +23,19 @@ export function Header() {
         </Link>
 
         <nav className={styles.nav}>
-          <Link href="/recipes" className={styles.navLink}>
-            Recipes
-          </Link>
-          <PantryNavLink className={styles.navLink} />
+          <div className={styles.navLeft}>
+            <Link href="/recipes" className={styles.navLink}>
+              Recipes
+            </Link>
+          </div>
+          <div className={styles.navRight}>
+            <AuthNavLinks className={styles.navLink} />
+          </div>
         </nav>
 
         <ThemeToggle />
         <UserMenu />
+        <MobileMenu />
       </div>
     </header>
   )
