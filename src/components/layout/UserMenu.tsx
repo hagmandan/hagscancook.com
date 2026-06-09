@@ -11,11 +11,27 @@
  */
 
 import Link from 'next/link'
+import { useEffect, useRef, useState } from 'react'
 import { useAuth } from './Providers'
 import styles from './UserMenu.module.css'
 
 export function UserMenu() {
   const { user, loading, logout } = useAuth()
+  const [isOpen, setIsOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDetailsElement>(null)
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    function handlePointerDown(event: PointerEvent) {
+      if (!dropdownRef.current?.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown)
+    return () => document.removeEventListener('pointerdown', handlePointerDown)
+  }, [isOpen])
 
   if (loading) {
     // Prevent layout shift while auth state resolves
@@ -37,8 +53,15 @@ export function UserMenu() {
 
   return (
     <div className={styles.userMenu}>
-      <details className={styles.dropdown}>
-        <summary className={styles.trigger} aria-label="User menu">
+      <details ref={dropdownRef} className={styles.dropdown} open={isOpen}>
+        <summary
+          className={styles.trigger}
+          aria-label="User menu"
+          onClick={(event) => {
+            event.preventDefault()
+            setIsOpen((open) => !open)
+          }}
+        >
           {user.photoURL ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -58,24 +81,27 @@ export function UserMenu() {
 
         <ul className={styles.menu} role="menu">
           <li role="none">
-            <Link href="/my-recipes" className={styles.menuItem} role="menuitem">
+            <Link href="/my-recipes" className={styles.menuItem} role="menuitem" onClick={() => setIsOpen(false)}>
               My Recipes
             </Link>
           </li>
           <li role="none">
-            <Link href="/favorites" className={styles.menuItem} role="menuitem">
+            <Link href="/favorites" className={styles.menuItem} role="menuitem" onClick={() => setIsOpen(false)}>
               Favorites
             </Link>
           </li>
           <li role="none">
-            <Link href="/profile" className={styles.menuItem} role="menuitem">
+            <Link href="/profile" className={styles.menuItem} role="menuitem" onClick={() => setIsOpen(false)}>
               Profile
             </Link>
           </li>
           <li role="separator" className={styles.divider} />
           <li role="none">
             <button
-              onClick={logout}
+              onClick={() => {
+                setIsOpen(false)
+                void logout()
+              }}
               className={styles.menuItem}
               role="menuitem"
               type="button"
