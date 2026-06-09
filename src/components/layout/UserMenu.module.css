@@ -156,4 +156,12 @@
   .displayName {
     display: none;
   }
+
+  .guestActions {
+    display: none;
+  }
+
+  .skeleton {
+    display: none;
+  }
 }
