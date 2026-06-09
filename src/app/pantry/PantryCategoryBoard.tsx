@@ -247,6 +247,9 @@ function SectionCard({
         ref={dialogRef}
         className={styles.moreDialog}
         onClose={() => setSelected(new Set())}
+        onClick={(event) => {
+          if (event.target === event.currentTarget) closeDialog()
+        }}
       >
         <div className={styles.moreDialogInner}>
           <div className={styles.moreDialogHeader}>
