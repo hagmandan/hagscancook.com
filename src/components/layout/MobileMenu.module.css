@@ -1,10 +1,132 @@
-/* MobileMenu styles — populated in Task 2 */
-.hamburger {}
-.backdrop {}
-.drawer {}
-.drawerUser {}
-.drawerAvatar {}
-.drawerAvatarFallback {}
-.drawerName {}
-.drawerLink {}
-.drawerDivider {}
+/* Hamburger button — only shown on mobile */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  padding: 6px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 0.375rem;
+  flex-shrink: 0;
+  transition: background-color 0.15s ease;
+}
+
+.hamburger:hover {
+  background-color: var(--color-surface-raised);
+}
+
+.hamburger span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background-color: var(--color-text-2);
+  border-radius: 2px;
+}
+
+@media (max-width: 639px) {
+  .hamburger {
+    display: flex;
+  }
+}
+
+/* Backdrop */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 55;
+}
+
+/* Drawer panel */
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100dvh;
+  width: min(280px, 75vw);
+  background-color: var(--color-surface);
+  border-left: 1px solid var(--color-border);
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem 0;
+  overflow-y: auto;
+  animation: slideIn 0.25s ease;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+/* User section at top of drawer */
+.drawerUser {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.25rem 1.25rem 1rem;
+  border-bottom: 1px solid var(--color-border-subtle);
+  margin-bottom: 0.5rem;
+}
+
+.drawerAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.drawerAvatarFallback {
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  background-color: var(--color-brand);
+  color: var(--color-brand-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.drawerName {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Nav links and action buttons share the same look */
+.drawerLink {
+  display: block;
+  width: 100%;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--color-text-2);
+  text-decoration: none;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.drawerLink:hover {
+  background-color: var(--color-surface-raised);
+  color: var(--color-text);
+}
+
+.drawerDivider {
+  height: 1px;
+  background-color: var(--color-border-subtle);
+  margin: 0.5rem 0;
+}
