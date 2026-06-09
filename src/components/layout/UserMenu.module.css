@@ -153,14 +153,8 @@
 }
 
 @media (max-width: 639px) {
-  .displayName {
-    display: none;
-  }
-
-  .guestActions {
-    display: none;
-  }
-
+  .userMenu,
+  .guestActions,
   .skeleton {
     display: none;
   }

@@ -37,9 +37,26 @@ export function MobileMenu() {
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
       >
-        <span />
-        <span />
-        <span />
+        {!loading && user?.photoURL ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={user.photoURL}
+            alt={user.displayName ?? 'Menu'}
+            className={styles.hamburgerAvatar}
+            width={28}
+            height={28}
+          />
+        ) : !loading && user?.displayName ? (
+          <span className={styles.hamburgerFallback}>
+            {user.displayName[0].toUpperCase()}
+          </span>
+        ) : (
+          <>
+            <span />
+            <span />
+            <span />
+          </>
+        )}
       </button>
 
       {open && (
@@ -82,6 +99,8 @@ export function MobileMenu() {
                 <>
                   <Link href="/my-recipes" className={styles.drawerLink}>My Recipes</Link>
                   <Link href="/pantry" className={styles.drawerLink}>My Pantry</Link>
+                  <Link href="/favorites" className={styles.drawerLink}>Favorites</Link>
+                  <Link href="/profile" className={styles.drawerLink}>Profile</Link>
                 </>
               )}
             </nav>
