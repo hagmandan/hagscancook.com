@@ -27,6 +27,7 @@ export default async function AdminLayout({
           <Link href="/admin/users" className={styles.navLink}>Users</Link>
           <Link href="/admin/tags" className={styles.navLink}>Tags</Link>
           <Link href="/admin/ingredients" className={styles.navLink}>Ingredients</Link>
+          <Link href="/admin/images" className={styles.navLink}>Images</Link>
         </nav>
       </aside>
       <main className={styles.main}>{children}</main>
