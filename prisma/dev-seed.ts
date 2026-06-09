@@ -23,13 +23,6 @@ const E2E_USER = {
   role: 'test' as const,
 }
 
-const PAGINATION_USER = {
-  firebaseUid: 'e2e-pagination-user',
-  email: 'e2e-pagination-user@hagscancook.test',
-  displayName: 'E2E Pagination Cook',
-  role: 'user' as const,
-}
-
 const INGREDIENT_TYPES = [
   { name: 'Produce', slug: 'produce' },
   { name: 'Pasta', slug: 'pasta' },
@@ -269,39 +262,11 @@ async function upsertE2EPantry() {
   return pantry.length
 }
 
-async function upsertPaginationRecipes() {
-  const paginationUser = await prisma.user.upsert({
-    where: { firebaseUid: PAGINATION_USER.firebaseUid },
-    update: {
-      email: PAGINATION_USER.email,
-      displayName: PAGINATION_USER.displayName,
-      role: PAGINATION_USER.role,
-    },
-    create: PAGINATION_USER,
-  })
-
-  for (let i = 1; i <= 25; i++) {
-    await prisma.recipe.upsert({
-      where: { slug: `e2e-pagination-recipe-${i}` },
-      update: {},
-      create: {
-        slug: `e2e-pagination-recipe-${i}`,
-        title: `Pagination Test Recipe ${i}`,
-        description: `A simple recipe for pagination testing (${i}).`,
-        status: 'published',
-        authorId: paginationUser.id,
-      },
-    })
-  }
-  console.log('  ✓ 25 pagination test recipes seeded')
-}
-
 async function main() {
   console.log('🌱 Seeding development fixtures…')
   await upsertLookups()
   const recipe = await upsertE2ERecipe()
   const pantryCount = await upsertE2EPantry()
-  await upsertPaginationRecipes()
   console.log(`  ✓ recipe: /recipes/${recipe.slug}`)
   console.log(`  ✓ user: ${E2E_USER.email}`)
   console.log(`  ✓ pantry: ${pantryCount} items`)
