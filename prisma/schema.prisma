@@ -270,6 +270,8 @@ model PantryItem {
   unit         String?
   /** Optional free-text note (e.g. "almost out", "in the freezer"). */
   note         String?
+  /** True when the user has flagged this item as out of stock. */
+  outOfStock   Boolean  @default(false) @map("out_of_stock")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 

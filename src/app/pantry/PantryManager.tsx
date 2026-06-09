@@ -41,7 +41,7 @@ export function PantryManager({ initialItems, ingredientTypes }: PantryManagerPr
     setItems((prev) => prev.filter((p) => p.id !== id))
   }
 
-  const [view, setView] = useState<'list' | 'category'>('category')
+  const [view, setView] = useState<'list' | 'category' | 'oos'>('category')
   const [sortBy, setSortBy] = useState<'category' | 'name'>('category')
 
   const sortedItems = useMemo(() => {
@@ -53,6 +53,18 @@ export function PantryManager({ initialItems, ingredientTypes }: PantryManagerPr
       return a.ingredient.name.localeCompare(b.ingredient.name)
     })
   }, [items, sortBy])
+
+  const oosGroups = useMemo(() => {
+    const groups = new Map<string, { typeName: string; items: PantryItemView[] }>()
+    for (const item of items) {
+      if (!item.outOfStock) continue
+      if (!groups.has(item.type.id)) {
+        groups.set(item.type.id, { typeName: item.type.name, items: [] })
+      }
+      groups.get(item.type.id)!.items.push(item)
+    }
+    return [...groups.values()].sort((a, b) => a.typeName.localeCompare(b.typeName))
+  }, [items])
 
   const showEmptyList = items.length === 0 && view === 'list'
 
@@ -86,6 +98,15 @@ export function PantryManager({ initialItems, ingredientTypes }: PantryManagerPr
             data-testid="pantry-view-list"
           >
             List
+          </button>
+          <button
+            type="button"
+            className={`${styles.toggleButton} ${view === 'oos' ? styles.toggleActive : ''}`}
+            onClick={() => setView('oos')}
+            aria-pressed={view === 'oos'}
+            data-testid="pantry-view-oos"
+          >
+            Out of Stock
           </button>
         </div>
 
@@ -125,6 +146,30 @@ export function PantryManager({ initialItems, ingredientTypes }: PantryManagerPr
             />
           ))}
         </ul>
+      ) : view === 'oos' ? (
+        oosGroups.length === 0 ? (
+          <div className={styles.empty}>
+            <p>Nothing out of stock — you&apos;re well stocked!</p>
+          </div>
+        ) : (
+          <>
+            {oosGroups.map((group) => (
+              <div key={group.typeName} className={styles.section}>
+                <h2 className={styles.sectionTitle}>{group.typeName}</h2>
+                <ul className={styles.list} role="list">
+                  {group.items.map((item) => (
+                    <PantryRow
+                      key={item.id}
+                      item={item}
+                      onUpdated={upsertLocal}
+                      onRemoved={removeLocal}
+                    />
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </>
+        )
       ) : (
         <PantryCategoryBoard
           items={items}

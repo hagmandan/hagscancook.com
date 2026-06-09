@@ -213,6 +213,7 @@ function SectionCard({
             className={styles.quickAddBtn}
             onClick={openDialog}
             aria-haspopup="dialog"
+            title={`Quickly add ${section.label} from a list of options`}
           >
             Quick-add
           </button>
@@ -250,7 +251,7 @@ function SectionCard({
         <div className={styles.moreDialogInner}>
           <div className={styles.moreDialogHeader}>
             <h3 className={styles.moreDialogTitle}>
-              Quickly add to {section.label}
+              Quickly Add to {section.label}
             </h3>
             <button
               type="button"
@@ -286,6 +287,7 @@ function SectionCard({
                   className={styles.pillSave}
                   onClick={handleSave}
                   disabled={isPending}
+                  title="Add selected options"
                 >
                   {isPending ? 'Adding…' : `Add ${selected.size}`}
                 </button>
@@ -294,6 +296,7 @@ function SectionCard({
                   className={styles.pillCancel}
                   onClick={() => setSelected(new Set())}
                   disabled={isPending}
+                  title="Clear currently selected options"
                 >
                   Clear
                 </button>
@@ -303,6 +306,7 @@ function SectionCard({
                 type="button"
                 className={styles.pillCancel}
                 onClick={closeDialog}
+                title="Close"
               >
                 Close
               </button>

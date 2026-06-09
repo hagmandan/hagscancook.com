@@ -26,6 +26,7 @@ export interface PantryItemView {
   amount: string | null
   unit: string | null
   note: string | null
+  outOfStock: boolean
   ingredient: { id: string; name: string }
   type: { id: string; name: string; slug: string }
 }
@@ -35,6 +36,7 @@ const ITEM_SELECT = {
   amount: true,
   unit: true,
   note: true,
+  outOfStock: true,
   ingredient: {
     select: {
       id: true,
@@ -49,6 +51,7 @@ type ItemRow = {
   amount: string | null
   unit: string | null
   note: string | null
+  outOfStock: boolean
   ingredient: { id: string; name: string; type: { id: string; name: string; slug: string } }
 }
 
@@ -58,6 +61,7 @@ function toView(row: ItemRow): PantryItemView {
     amount: row.amount,
     unit: row.unit,
     note: row.note,
+    outOfStock: row.outOfStock,
     ingredient: { id: row.ingredient.id, name: row.ingredient.name },
     type: row.ingredient.type,
   }
@@ -188,6 +192,35 @@ export async function updatePantryItem(
       operation: 'update',
       runtime: 'server',
     })
+    return { error: 'Failed to update item. Please try again.' }
+  }
+}
+
+/** Flips the out-of-stock flag on a pantry item the current user owns. */
+export async function togglePantryItemOutOfStock(
+  id: string
+): Promise<{ item: PantryItemView } | { error: string }> {
+  const session = await requireSession()
+
+  const existing = await db.pantryItem.findUnique({
+    where: { id },
+    select: { userId: true, outOfStock: true },
+  })
+  if (!existing) return { error: 'Pantry item not found' }
+  if (existing.userId !== session.userId) {
+    return { error: 'Not authorised to edit this item' }
+  }
+
+  try {
+    const row = await db.pantryItem.update({
+      where: { id },
+      data: { outOfStock: !existing.outOfStock },
+      select: ITEM_SELECT,
+    })
+    revalidatePath('/pantry')
+    return { item: toView(row) }
+  } catch (err) {
+    captureException(err, { feature: 'pantry', operation: 'toggle-oos', runtime: 'server' })
     return { error: 'Failed to update item. Please try again.' }
   }
 }

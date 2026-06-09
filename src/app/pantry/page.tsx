@@ -20,6 +20,7 @@ async function getPantryItems(userId: string): Promise<PantryItemView[]> {
       amount: true,
       unit: true,
       note: true,
+      outOfStock: true,
       ingredient: {
         select: {
           id: true,
@@ -35,6 +36,7 @@ async function getPantryItems(userId: string): Promise<PantryItemView[]> {
     amount: row.amount,
     unit: row.unit,
     note: row.note,
+    outOfStock: row.outOfStock,
     ingredient: { id: row.ingredient.id, name: row.ingredient.name },
     type: row.ingredient.type,
   }))

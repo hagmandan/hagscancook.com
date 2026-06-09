@@ -11,11 +11,12 @@ vi.mock('next/link', () => ({
   ),
 }))
 
-vi.mock('./PantryNavLink', () => ({
-  PantryNavLink: ({ className }: { className?: string }) => (
-    <a href="/pantry" className={className}>
-      Pantry
-    </a>
+vi.mock('./AuthNavLinks', () => ({
+  AuthNavLinks: ({ className }: { className?: string }) => (
+    <>
+      <a href="/pantry" className={className}>My Pantry</a>
+      <a href="/my-recipes" className={className}>My Recipes</a>
+    </>
   ),
 }))
 
@@ -33,6 +34,8 @@ vi.mock('./Header.module.css', () => ({
     inner: 'inner',
     logo: 'logo',
     nav: 'nav',
+    navLeft: 'navLeft',
+    navRight: 'navRight',
     navLink: 'navLink',
   },
 }))
@@ -43,7 +46,8 @@ describe('Header', () => {
 
     expect(screen.getByRole('link', { name: 'HagsCanCook' })).toHaveAttribute('href', '/')
     expect(screen.getByRole('link', { name: 'Recipes' })).toHaveAttribute('href', '/recipes')
-    expect(screen.getByRole('link', { name: 'Pantry' })).toHaveAttribute('href', '/pantry')
+    expect(screen.getByRole('link', { name: 'My Pantry' })).toHaveAttribute('href', '/pantry')
+    expect(screen.getByRole('link', { name: 'My Recipes' })).toHaveAttribute('href', '/my-recipes')
     expect(screen.getByRole('button', { name: 'Theme' })).toBeInTheDocument()
     expect(screen.getByText('User menu')).toBeInTheDocument()
   })

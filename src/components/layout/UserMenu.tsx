@@ -81,11 +81,6 @@ export function UserMenu() {
 
         <ul className={styles.menu} role="menu">
           <li role="none">
-            <Link href="/my-recipes" className={styles.menuItem} role="menuitem" onClick={() => setIsOpen(false)}>
-              My Recipes
-            </Link>
-          </li>
-          <li role="none">
             <Link href="/favorites" className={styles.menuItem} role="menuitem" onClick={() => setIsOpen(false)}>
               Favorites
             </Link>

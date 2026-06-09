@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import { PantryNavLink } from './PantryNavLink'
+import { AuthNavLinks } from './AuthNavLinks'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 
 const mockUseAuth = vi.fn()
@@ -17,7 +17,7 @@ vi.mock('next/link', () => ({
   ),
 }))
 
-describe('PantryNavLink', () => {
+describe('AuthNavLinks', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
@@ -25,7 +25,7 @@ describe('PantryNavLink', () => {
   it('renders nothing while auth is loading', () => {
     mockUseAuth.mockReturnValue({ user: null, loading: true })
 
-    const { container } = render(<PantryNavLink className="nav-link" />)
+    const { container } = render(<AuthNavLinks className="nav-link" />)
 
     expect(container).toBeEmptyDOMElement()
   })
@@ -33,18 +33,22 @@ describe('PantryNavLink', () => {
   it('renders nothing for guests', () => {
     mockUseAuth.mockReturnValue({ user: null, loading: false })
 
-    const { container } = render(<PantryNavLink className="nav-link" />)
+    const { container } = render(<AuthNavLinks className="nav-link" />)
 
     expect(container).toBeEmptyDOMElement()
   })
 
-  it('renders the pantry link for authenticated users', () => {
+  it('renders My Pantry and My Recipes links for authenticated users', () => {
     mockUseAuth.mockReturnValue({ user: { displayName: 'Hags' }, loading: false })
 
-    render(<PantryNavLink className="nav-link" />)
+    render(<AuthNavLinks className="nav-link" />)
 
-    const link = screen.getByRole('link', { name: 'Pantry' })
-    expect(link).toHaveAttribute('href', '/pantry')
-    expect(link).toHaveClass('nav-link')
+    const pantryLink = screen.getByRole('link', { name: 'My Pantry' })
+    expect(pantryLink).toHaveAttribute('href', '/pantry')
+    expect(pantryLink).toHaveClass('nav-link')
+
+    const recipesLink = screen.getByRole('link', { name: 'My Recipes' })
+    expect(recipesLink).toHaveAttribute('href', '/my-recipes')
+    expect(recipesLink).toHaveClass('nav-link')
   })
 })

@@ -56,6 +56,15 @@
   transition: border-color 0.15s ease;
 }
 
+@media (width < 640px) {
+  .filters {
+    justify-content: space-between;
+  }
+  .filterSelect {
+    flex-grow: 1;
+  }
+}
+
 .filterSelect:focus {
   outline: none;
   border-color: var(--color-brand);

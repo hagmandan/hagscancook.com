@@ -5,6 +5,7 @@ import { UnitSelect } from '@/components/ui/UnitSelect'
 import {
   updatePantryItem,
   removePantryItem,
+  togglePantryItemOutOfStock,
   type PantryItemView,
 } from '@/lib/actions/pantry'
 import { PANTRY_LIMITS } from '@/lib/schemas/pantry'
@@ -24,6 +25,7 @@ export function PantryRow({
   onRemoved,
 }: PantryRowProps) {
   const [editing, setEditing] = useState(false)
+  const [oos, setOos] = useState(item.outOfStock)
   const [amount, setAmount] = useState(item.amount ?? '')
   const [unit, setUnit] = useState(item.unit ?? '')
   const [note, setNote] = useState(item.note ?? '')
@@ -48,6 +50,23 @@ export function PantryRow({
       }
       onUpdated(result.item)
       setEditing(false)
+    })
+  }
+
+  function handleToggleOos() {
+    const prevOos = oos
+    const newOos = !prevOos
+    setOos(newOos)
+    onUpdated({ ...item, outOfStock: newOos })
+    startTransition(async () => {
+      const result = await togglePantryItemOutOfStock(item.id)
+      if ('error' in result) {
+        setOos(prevOos)
+        onUpdated({ ...item, outOfStock: prevOos })
+        setError(result.error)
+      } else {
+        onUpdated(result.item)
+      }
     })
   }
 
@@ -123,6 +142,7 @@ export function PantryRow({
     <li className={styles.row}>
       <div className={styles.rowMain}>
         <span className={styles.itemName}>{item.ingredient.name}</span>
+        {oos && <span className={styles.oosBadge}>OUT</span>}
         {showCategory && <span className={styles.categoryTag}>{item.type.name}</span>}
         {(item.amount || item.unit) && (
           <span className={styles.itemAmount}>
@@ -134,9 +154,21 @@ export function PantryRow({
       <div className={styles.rowActions}>
         <button
           type="button"
+          className={oos ? styles.oosToggleActive : styles.oosToggle}
+          onClick={handleToggleOos}
+          disabled={isPending}
+          aria-label={oos ? `Mark ${item.ingredient.name} in stock` : `Mark ${item.ingredient.name} out of stock`}
+          title={oos ? `Mark ${item.ingredient.name} in stock` : `Mark ${item.ingredient.name} out of stock`}
+          aria-pressed={oos}
+        >
+          {oos ? '✓ Out' : 'Out'}
+        </button>
+        <button
+          type="button"
           className={styles.iconButton}
           onClick={startEdit}
           aria-label={`Edit ${item.ingredient.name}`}
+          title={`Edit ${item.ingredient.name}`}
         >
           ✎
         </button>
@@ -145,7 +177,8 @@ export function PantryRow({
           className={styles.iconButton}
           onClick={handleRemove}
           disabled={isPending}
-          aria-label={`Remove ${item.ingredient.name}`}
+          aria-label={`Remove ${item.ingredient.name} from pantry`}
+          title={`Remove ${item.ingredient.name} from pantry`}
         >
           ✕
         </button>

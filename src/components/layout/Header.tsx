@@ -21,7 +21,6 @@ export function Header() {
         <Link href="/" className={styles.logo}>
           HagsCanCook
         </Link>
-
         <nav className={styles.nav}>
           <div className={styles.navLeft}>
             <Link href="/recipes" className={styles.navLink}>
