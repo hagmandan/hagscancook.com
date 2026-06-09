@@ -12,6 +12,7 @@ import { MultiSelect, CreatableMultiSelect } from '@/components/ui/MultiSelect'
 import { CUISINES } from '@/lib/constants/cuisines'
 import { DIETARY_RESTRICTIONS } from '@/lib/constants/dietary-restrictions'
 import { COOKING_METHODS } from '@/lib/constants/cooking-methods'
+import { useCoverUpload } from './useCoverUpload'
 import styles from './ChefMode.module.css'
 
 interface ChefModeProps {
@@ -19,14 +20,18 @@ interface ChefModeProps {
   tags: { id: string; name: string }[]
   ingredientTypes: { id: string; name: string }[]
   recipeId?: string
+  coverImageStatus?: 'pending_approval' | 'approved' | 'rejected' | null
 }
 
 const dietaryOptions = DIETARY_RESTRICTIONS.map((d) => ({ label: d, value: d }))
 const cookingMethodOptions = COOKING_METHODS.map((m) => ({ label: m, value: m }))
 
-export function ChefMode({ form, tags, ingredientTypes, recipeId }: ChefModeProps) {
+export function ChefMode({ form, tags, ingredientTypes, recipeId, coverImageStatus }: ChefModeProps) {
   const { register, watch, setValue, formState: { errors } } = form
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [consentGiven, setConsentGiven] = useState(false)
+  const { isUploading, fileInputRef, handleCoverUpload } = useCoverUpload(setValue)
+  const coverImageUrl = watch('coverImageUrl')
 
   const title = watch('title')
   const { taken: titleTaken } = useTitleAvailability(title, recipeId)
@@ -75,6 +80,56 @@ export function ChefMode({ form, tags, ingredientTypes, recipeId }: ChefModeProp
             />
             <CharCounter value={description} max={LIMITS.DESCRIPTION} />
             {errors.description && <span className={styles.error}>{errors.description.message}</span>}
+          </div>
+
+          <div className={styles.field}>
+            <label className={styles.label}>Cover photo</label>
+            <div className={styles.coverWrapper}>
+              {coverImageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={coverImageUrl} alt="Cover preview" className={styles.coverPreview} />
+              ) : (
+                <div className={`${styles.coverPlaceholder} ${isUploading ? styles.coverLoading : ''}`}>
+                  {isUploading ? '' : 'No image selected'}
+                </div>
+              )}
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                ref={fileInputRef}
+                onChange={handleCoverUpload}
+                className={styles.fileInput}
+                data-testid="cover-upload"
+                disabled={!consentGiven}
+              />
+              <label className={styles.consentLabel}>
+                <input
+                  type="checkbox"
+                  checked={consentGiven}
+                  onChange={(e) => setConsentGiven(e.target.checked)}
+                />
+                {' '}I confirm this image is my own and complies with our{' '}
+                <a href="/terms" target="_blank" rel="noopener noreferrer">content guidelines</a>.
+              </label>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={!consentGiven || isUploading}
+                className={`${styles.uploadButton} ${isUploading ? styles.loading : ''}`}
+              >
+                {coverImageUrl ? 'Change photo' : 'Upload photo'}
+              </button>
+            </div>
+            {coverImageStatus === 'pending_approval' && (
+              <p className={styles.imageStatusPending}>
+                Image under review — it will appear publicly once approved.
+              </p>
+            )}
+            {coverImageStatus === 'rejected' && (
+              <p className={styles.imageStatusRejected}>
+                Image rejected — please upload a different image.
+              </p>
+            )}
           </div>
 
         </section>

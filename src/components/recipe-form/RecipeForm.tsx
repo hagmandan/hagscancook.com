@@ -30,6 +30,8 @@ interface RecipeFormProps {
   recipeId?: string
   /** The recipe's current status. Defaults to 'draft' for new recipes. */
   initialStatus?: 'draft' | 'published'
+  /** Persisted moderation status of the current cover image. Null when no image. */
+  coverImageStatus?: 'pending_approval' | 'approved' | 'rejected' | null
   /** All available tags to render in the multi-select. */
   tags: { id: string; name: string }[]
   /** All ingredient types for the per-row type selector. */
@@ -52,7 +54,7 @@ const DEFAULT_VALUES: RecipeFormValues = {
   steps: [],
 }
 
-export function RecipeForm({ initialValues, recipeId, initialStatus = 'draft', tags, ingredientTypes }: RecipeFormProps) {
+export function RecipeForm({ initialValues, recipeId, initialStatus = 'draft', coverImageStatus, tags, ingredientTypes }: RecipeFormProps) {
   const searchParams = useSearchParams()
   const router = useRouter()
   const toast = useToast()
@@ -101,9 +103,9 @@ export function RecipeForm({ initialValues, recipeId, initialStatus = 'draft', t
       />
 
       {mode === 'guided' ? (
-        <GuidedMode form={form} tags={tags} ingredientTypes={ingredientTypes} recipeId={recipeId} />
+        <GuidedMode form={form} tags={tags} ingredientTypes={ingredientTypes} recipeId={recipeId} coverImageStatus={coverImageStatus} />
       ) : (
-        <ChefMode form={form} tags={tags} ingredientTypes={ingredientTypes} recipeId={recipeId} />
+        <ChefMode form={form} tags={tags} ingredientTypes={ingredientTypes} recipeId={recipeId} coverImageStatus={coverImageStatus} />
       )}
     </div>
   )

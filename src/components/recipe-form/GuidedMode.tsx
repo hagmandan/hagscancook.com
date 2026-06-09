@@ -12,6 +12,7 @@ import { MultiSelect, CreatableMultiSelect } from '@/components/ui/MultiSelect'
 import { CUISINES } from '@/lib/constants/cuisines'
 import { DIETARY_RESTRICTIONS } from '@/lib/constants/dietary-restrictions'
 import { COOKING_METHODS } from '@/lib/constants/cooking-methods'
+import { useCoverUpload } from './useCoverUpload'
 import styles from './GuidedMode.module.css'
 
 type Tab = 'about' | 'details' | 'ingredients' | 'steps' | 'preview'
@@ -29,14 +30,18 @@ interface GuidedModeProps {
   tags: { id: string; name: string }[]
   ingredientTypes: { id: string; name: string }[]
   recipeId?: string
+  coverImageStatus?: 'pending_approval' | 'approved' | 'rejected' | null
 }
 
 const dietaryOptions = DIETARY_RESTRICTIONS.map((d) => ({ label: d, value: d }))
 const cookingMethodOptions = COOKING_METHODS.map((m) => ({ label: m, value: m }))
 
-export function GuidedMode({ form, tags, ingredientTypes, recipeId }: GuidedModeProps) {
+export function GuidedMode({ form, tags, ingredientTypes, recipeId, coverImageStatus }: GuidedModeProps) {
   const [activeTab, setActiveTab] = useState<Tab>('about')
   const { register, watch, setValue, formState: { errors } } = form
+  const [consentGiven, setConsentGiven] = useState(false)
+  const { isUploading, fileInputRef, handleCoverUpload } = useCoverUpload(setValue)
+  const coverImageUrl = watch('coverImageUrl')
 
   const cookingMethods = watch('cookingMethods')
   const dietaryRestrictions = watch('dietaryRestrictions')
@@ -90,6 +95,7 @@ export function GuidedMode({ form, tags, ingredientTypes, recipeId }: GuidedMode
             <p className={styles.hint}>Start with the basics — what&apos;s the recipe and why should someone make it?</p>
 
             <div className={styles.aboutGrid}>
+              {/* Left: title + description */}
               <div className={styles.aboutMain}>
                 <div className={styles.field}>
                   <label className={styles.label} htmlFor="g-title">
@@ -124,6 +130,56 @@ export function GuidedMode({ form, tags, ingredientTypes, recipeId }: GuidedMode
                   <CharCounter value={watchedValues.description} max={LIMITS.DESCRIPTION} />
                   {errors.description && <span className={styles.error}>{errors.description.message}</span>}
                 </div>
+              </div>
+
+              {/* Right: cover photo */}
+              <div className={styles.field}>
+                <label className={styles.label}>Cover photo</label>
+                <div className={styles.coverWrapper}>
+                  {coverImageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={coverImageUrl} alt="Cover" className={styles.coverPreview} />
+                  ) : (
+                    <div className={`${styles.coverPlaceholder} ${isUploading ? styles.coverLoading : ''}`}>
+                      {isUploading ? '' : 'No photo yet'}
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    ref={fileInputRef}
+                    onChange={handleCoverUpload}
+                    className={styles.fileInput}
+                    disabled={!consentGiven}
+                  />
+                  <label className={styles.consentLabel}>
+                    <input
+                      type="checkbox"
+                      checked={consentGiven}
+                      onChange={(e) => setConsentGiven(e.target.checked)}
+                    />
+                    {' '}I confirm this image is my own and complies with our{' '}
+                    <a href="/terms" target="_blank" rel="noopener noreferrer">content guidelines</a>.
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={!consentGiven || isUploading}
+                    className={`${styles.uploadButton} ${isUploading ? styles.loading : ''}`}
+                  >
+                    {coverImageUrl ? 'Change photo' : 'Upload photo'}
+                  </button>
+                </div>
+                {coverImageStatus === 'pending_approval' && (
+                  <p className={styles.imageStatusPending}>
+                    Image under review — it will appear publicly once approved.
+                  </p>
+                )}
+                {coverImageStatus === 'rejected' && (
+                  <p className={styles.imageStatusRejected}>
+                    Image rejected — please upload a different image.
+                  </p>
+                )}
               </div>
             </div>
           </div>
