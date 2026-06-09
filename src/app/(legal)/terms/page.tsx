@@ -45,7 +45,23 @@ export default function TermsPage() {
         <li>The Content does not violate any applicable law.</li>
       </ul>
 
-      <h2>4. Acceptable Use</h2>
+      <h2>4. Image Uploads</h2>
+      <p>
+        When you upload a cover image for a recipe, you represent that:
+      </p>
+      <ul>
+        <li>The image is your own original content or content you have the right to use.</li>
+        <li>The image is food or cooking-related and appropriate for all audiences.</li>
+        <li>The image does not contain adult content, hate imagery, violence, or copyrighted
+          material you do not own.</li>
+      </ul>
+      <p>
+        All uploaded images are reviewed by our team before they appear publicly. We reserve
+        the right to reject or remove any image at our sole discretion. Rejected images are
+        not deleted from our storage; you may upload a replacement image at any time.
+      </p>
+
+      <h2>5. Acceptable Use</h2>
       <p>You agree not to:</p>
       <ul>
         <li>Post content that is unlawful, harmful, harassing, defamatory, or obscene.</li>
@@ -55,20 +71,20 @@ export default function TermsPage() {
         <li>Impersonate any person or entity.</li>
       </ul>
 
-      <h2>5. Copyright & DMCA</h2>
+      <h2>6. Copyright & DMCA</h2>
       <p>
         We respect intellectual property rights. If you believe content on the Site infringes your
         copyright, please review our <a href="/dmca">DMCA & Copyright</a> policy and submit a
         takedown notice.
       </p>
 
-      <h2>6. Content Moderation</h2>
+      <h2>7. Content Moderation</h2>
       <p>
         We reserve the right to remove Content or suspend accounts that violate these Terms or that
         we otherwise determine, in our sole discretion, are harmful to the community or the Site.
       </p>
 
-      <h2>7. Disclaimer of Warranties</h2>
+      <h2>8. Disclaimer of Warranties</h2>
       <p>
         The Site is provided &ldquo;as is&rdquo; and &ldquo;as available&rdquo; without warranty of
         any kind. We do not guarantee that recipes are accurate, safe, or suitable for any
@@ -76,21 +92,21 @@ export default function TermsPage() {
         dietary or medical advice.
       </p>
 
-      <h2>8. Limitation of Liability</h2>
+      <h2>9. Limitation of Liability</h2>
       <p>
         To the fullest extent permitted by law, hags can cook and its operators shall not be liable
         for any indirect, incidental, special, or consequential damages arising from your use of the
         Site.
       </p>
 
-      <h2>9. Changes to These Terms</h2>
+      <h2>10. Changes to These Terms</h2>
       <p>
         We may update these Terms from time to time. Continued use of the Site after changes are
         posted constitutes your acceptance of the revised Terms. We will update the &ldquo;Last
         updated&rdquo; date at the top of this page.
       </p>
 
-      <h2>10. Contact</h2>
+      <h2>11. Contact</h2>
       <p>
         Questions about these Terms? Email us at{' '}
         <a href="mailto:hello@hagscancook.com">hello@hagscancook.com</a>.
