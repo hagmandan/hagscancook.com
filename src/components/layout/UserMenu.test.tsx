@@ -71,7 +71,7 @@ describe('UserMenu', () => {
     render(<UserMenu />)
 
     expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/login')
-    expect(screen.getByRole('link', { name: 'Sign up free' })).toHaveAttribute('href', '/signup')
+    expect(screen.getByRole('link', { name: 'Sign up' })).toHaveAttribute('href', '/signup')
   })
 
   it('renders a loading skeleton while auth state resolves', () => {

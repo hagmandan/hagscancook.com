@@ -41,7 +41,7 @@ describe('Header', () => {
   it('renders primary navigation and header controls', () => {
     render(<Header />)
 
-    expect(screen.getByRole('link', { name: 'hags can cook' })).toHaveAttribute('href', '/')
+    expect(screen.getByRole('link', { name: 'HagsCanCook' })).toHaveAttribute('href', '/')
     expect(screen.getByRole('link', { name: 'Recipes' })).toHaveAttribute('href', '/recipes')
     expect(screen.getByRole('link', { name: 'Pantry' })).toHaveAttribute('href', '/pantry')
     expect(screen.getByRole('button', { name: 'Theme' })).toBeInTheDocument()

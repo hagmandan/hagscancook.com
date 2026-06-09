@@ -95,11 +95,11 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
   const hasFilters = !!(filters.cuisine || filters.dietary || filters.tag)
 
   return (
-    <div className={styles.page}>
+    <section className={styles.page}>
       <div className={styles.header}>
         <h1 className={styles.title}>Recipes</h1>
         <Link href="/recipes/new" className={styles.newButton}>
-          + New recipe
+          + Add Recipe
         </Link>
       </div>
 
@@ -175,6 +175,6 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
           filters={filters}
         />
       )}
-    </div>
+    </section>
   )
 }

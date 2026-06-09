@@ -45,7 +45,7 @@ export function UserMenu() {
           Sign in
         </Link>
         <Link href="/signup" className={styles.signUp}>
-          Sign up free
+          Sign up
         </Link>
       </div>
     )

@@ -1,18 +1,64 @@
-import { dirname } from 'path'
-import { fileURLToPath } from 'url'
-import { FlatCompat } from '@eslint/eslintrc'
+import nextPlugin from '@next/eslint-plugin-next'
+import reactHooksPlugin from 'eslint-plugin-react-hooks'
 import tseslint from '@typescript-eslint/eslint-plugin'
 import tsParser from '@typescript-eslint/parser'
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
-
-const compat = new FlatCompat({ baseDirectory: __dirname })
-
 /** @type {import('eslint').Linter.Config[]} */
 const config = [
-  // Next.js recommended rules (includes React, React Hooks, accessibility)
-  ...compat.extends('next/core-web-vitals'),
+  // Ignore generated and build artifacts
+  {
+    ignores: [
+      '.next/**',
+      'node_modules/**',
+      'prisma/generated/**',
+      'playwright-report/**',
+      'test-results/**',
+      'coverage/**',
+      'next-env.d.ts',
+      'tsconfig.tsbuildinfo',
+    ],
+  },
+
+  // Next.js and React Hooks recommended rules using native flat config.
+  {
+    files: ['**/*.{js,jsx,ts,tsx}'],
+    plugins: {
+      '@next/next': nextPlugin,
+      'react-hooks': reactHooksPlugin,
+    },
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      parserOptions: {
+        ecmaFeatures: { jsx: true },
+      },
+      globals: {
+        React: 'readonly',
+        console: 'readonly',
+        document: 'readonly',
+        window: 'readonly',
+        localStorage: 'readonly',
+        fetch: 'readonly',
+        FormData: 'readonly',
+        HTMLDialogElement: 'readonly',
+        Node: 'readonly',
+        PointerEvent: 'readonly',
+        Response: 'readonly',
+        Request: 'readonly',
+        URL: 'readonly',
+        URLSearchParams: 'readonly',
+        process: 'readonly',
+        Buffer: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+      },
+    },
+    rules: {
+      ...reactHooksPlugin.configs.flat.recommended.rules,
+      ...nextPlugin.configs.recommended.rules,
+      ...nextPlugin.configs['core-web-vitals'].rules,
+    },
+  },
 
   // TypeScript rules — applied to all .ts/.tsx files
   {
@@ -22,9 +68,6 @@ const config = [
     },
     languageOptions: {
       parser: tsParser,
-      parserOptions: {
-        project: './tsconfig.json',
-      },
     },
     rules: {
       // Disallow `any` — use Prisma-generated types, Zod inferred types, or `unknown`
@@ -34,18 +77,10 @@ const config = [
         'error',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
       ],
+      // This rule is too broad for common mount/debounce state synchronization
+      // patterns used in this app.
+      'react-hooks/set-state-in-effect': 'off',
     },
-  },
-
-  // Ignore generated and build artifacts
-  {
-    ignores: [
-      '.next/**',
-      'node_modules/**',
-      'prisma/generated/**',
-      'playwright-report/**',
-      'test-results/**',
-    ],
   },
 ]
 

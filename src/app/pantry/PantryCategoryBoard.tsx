@@ -10,10 +10,6 @@ import { PantryRow } from './PantryRow'
 import { PantrySectionAdd } from './PantrySectionAdd'
 import styles from './pantry.module.css'
 
-const MAPPED_TYPE_SLUGS = new Set(
-  PANTRY_SECTIONS.flatMap((s) => [...s.typeSlugs])
-)
-
 interface IngredientType {
   id: string
   name: string

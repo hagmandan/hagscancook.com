@@ -7,7 +7,7 @@
     "build": "next build",
     "dev": "yarn seed:dev && next dev",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "import-recipes": "tsx scripts/import-recipes.ts",
     "seed:dev": "tsx prisma/dev-seed.ts",
     "test": "vitest",

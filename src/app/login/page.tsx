@@ -86,7 +86,7 @@ function LoginContent() {
         <p className={styles.subtitle}>
           Don&apos;t have an account?{' '}
           <Link href="/signup" className={styles.link}>
-            Sign up free
+            Sign up for free
           </Link>
         </p>
 

@@ -32,6 +32,18 @@
   position: absolute;
   inset: 0;
   background: linear-gradient(135deg, var(--color-surface-raised) 0%, var(--color-border) 100%);
+
+  background-image: url('/images/food-dish-covered.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: 50% 50%;
+  transition: opacity 230ms ease-in-out;
+  opacity: 0.5;
+}
+
+.card:hover .imagePlaceholder,
+.card:focus-visible .imagePlaceholder {
+  opacity: 0.85;
 }
 
 .body {

@@ -61,7 +61,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   )
 
   useEffect(() => {
-    return () => timers.current.forEach((t) => clearTimeout(t))
+    const activeTimers = timers.current
+    return () => activeTimers.forEach((t) => clearTimeout(t))
   }, [])
 
   return (

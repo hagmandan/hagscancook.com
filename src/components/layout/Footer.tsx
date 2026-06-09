@@ -10,16 +10,9 @@ export function Footer() {
     <footer className={styles.footer}>
       <div className={styles.inner}>
         <p className={styles.copy}>
-          &copy; {new Date().getFullYear()} hags can cook
+          &copy;{new Date().getFullYear()} hags can cook
         </p>
         <nav className={styles.links}>
-          <Link href="/recipes" className={styles.link}>
-            Recipes
-          </Link>
-          <Link href="/login" className={styles.link}>
-            Sign in
-          </Link>
-          <span className={styles.divider} aria-hidden="true" />
           <Link href="/terms" className={styles.link}>
             Terms
           </Link>
@@ -28,6 +21,12 @@ export function Footer() {
           </Link>
           <Link href="/dmca" className={styles.link}>
             DMCA
+          </Link>
+          <Link href="/recipes" className={styles.link}>
+            Recipes
+          </Link>
+          <Link href="/login" className={styles.link}>
+            Sign in
           </Link>
         </nav>
       </div>
