@@ -19,9 +19,9 @@ export function Footer() {
           <Link href="/privacy" className={styles.link}>
             Privacy
           </Link>
-          <Link href="/dmca" className={styles.link}>
+          {/* <Link href="/dmca" className={styles.link}>
             DMCA
-          </Link>
+          </Link> */}
         </nav>
       </div>
     </footer>

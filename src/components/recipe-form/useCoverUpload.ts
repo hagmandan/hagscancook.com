@@ -8,6 +8,8 @@ import { auth } from '@/lib/firebase-client'
 import { captureException } from '@/lib/monitoring/errors'
 
 const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
+const MAX_COVER_IMAGE_BYTES = 5 * 1024 * 1024
+const MAX_COVER_IMAGE_MB = 5
 
 /** Manages cover photo upload state using the Firebase Storage client SDK. */
 export function useCoverUpload(setValue: UseFormReturn<RecipeFormValues>['setValue']) {
@@ -17,7 +19,17 @@ export function useCoverUpload(setValue: UseFormReturn<RecipeFormValues>['setVal
 
   async function handleCoverUpload(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
-    if (!file || !ALLOWED_TYPES.has(file.type)) return
+    if (!file) return
+    if (!ALLOWED_TYPES.has(file.type)) {
+      setUploadError('Please choose a JPEG, PNG, WebP, or GIF image.')
+      e.target.value = ''
+      return
+    }
+    if (file.size > MAX_COVER_IMAGE_BYTES) {
+      setUploadError(`Cover image must be ${MAX_COVER_IMAGE_MB}MB or smaller.`)
+      e.target.value = ''
+      return
+    }
     setIsUploading(true)
     setUploadError(null)
     try {
