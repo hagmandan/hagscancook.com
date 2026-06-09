@@ -67,6 +67,54 @@ export async function adminDeleteRecipe(
 }
 
 // ---------------------------------------------------------------------------
+// Image moderation
+// ---------------------------------------------------------------------------
+
+/**
+ * Approves a recipe's pending cover image, making it publicly visible.
+ */
+export async function approveRecipeImage(
+  recipeId: string
+): Promise<{ ok: true } | { error: string }> {
+  await requireAdmin()
+  const recipe = await db.recipe.findUnique({
+    where: { id: recipeId },
+    select: { slug: true },
+  })
+  if (!recipe) return { error: 'Recipe not found' }
+
+  await db.recipe.update({
+    where: { id: recipeId },
+    data: { coverImageStatus: 'approved' },
+  })
+  revalidatePath(`/recipes/${recipe.slug}`)
+  revalidatePath('/admin/images')
+  return { ok: true }
+}
+
+/**
+ * Rejects a recipe's pending cover image. The file is kept in Firebase Storage;
+ * admin removes manually if needed. The user sees an in-app rejection notice.
+ */
+export async function rejectRecipeImage(
+  recipeId: string
+): Promise<{ ok: true } | { error: string }> {
+  await requireAdmin()
+  const recipe = await db.recipe.findUnique({
+    where: { id: recipeId },
+    select: { slug: true },
+  })
+  if (!recipe) return { error: 'Recipe not found' }
+
+  await db.recipe.update({
+    where: { id: recipeId },
+    data: { coverImageStatus: 'rejected' },
+  })
+  revalidatePath('/admin/images')
+  return { ok: true }
+}
+
+// ---------------------------------------------------------------------------
 // User role management
 // ---------------------------------------------------------------------------
 

@@ -39,10 +39,12 @@ import { db } from '@/lib/db'
 import { captureException } from '@/lib/monitoring/errors'
 import {
   adminDeleteRecipe,
+  approveRecipeImage,
   createIngredient,
   createIngredientType,
   createTag,
   deleteTag,
+  rejectRecipeImage,
   setUserRole,
   unpublishRecipe,
   updateIngredientType,
@@ -106,6 +108,47 @@ describe('admin recipe moderation actions', () => {
       data: { deletedAt: expect.any(Date) },
     })
     expect(mockRevalidatePath).toHaveBeenCalledWith('/admin')
+  })
+
+  it('returns not found when approving a missing recipe', async () => {
+    mockRecipeFindUnique.mockResolvedValue(null)
+
+    const result = await approveRecipeImage('recipe-1')
+
+    expect(result).toEqual({ error: 'Recipe not found' })
+    expect(mockRecipeUpdate).not.toHaveBeenCalled()
+  })
+
+  it('approves a recipe image and revalidates recipe page and queue', async () => {
+    const result = await approveRecipeImage('recipe-1')
+
+    expect(result).toEqual({ ok: true })
+    expect(mockRecipeUpdate).toHaveBeenCalledWith({
+      where: { id: 'recipe-1' },
+      data: { coverImageStatus: 'approved' },
+    })
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/recipes/lemon-pasta')
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/admin/images')
+  })
+
+  it('returns not found when rejecting a missing recipe', async () => {
+    mockRecipeFindUnique.mockResolvedValue(null)
+
+    const result = await rejectRecipeImage('recipe-1')
+
+    expect(result).toEqual({ error: 'Recipe not found' })
+    expect(mockRecipeUpdate).not.toHaveBeenCalled()
+  })
+
+  it('rejects a recipe image and revalidates the queue', async () => {
+    const result = await rejectRecipeImage('recipe-1')
+
+    expect(result).toEqual({ ok: true })
+    expect(mockRecipeUpdate).toHaveBeenCalledWith({
+      where: { id: 'recipe-1' },
+      data: { coverImageStatus: 'rejected' },
+    })
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/admin/images')
   })
 })
 
