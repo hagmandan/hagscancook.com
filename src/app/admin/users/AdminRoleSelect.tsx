@@ -30,6 +30,7 @@ export function AdminRoleSelect({ userId, currentRole, disabled }: AdminRoleSele
       <option value="user">user</option>
       <option value="chef">chef</option>
       <option value="admin">admin</option>
+      <option value="test" disabled>test (system)</option>
     </select>
   )
 }
