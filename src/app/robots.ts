@@ -46,7 +46,8 @@ export default function robots(): MetadataRoute.Robots {
           '/_next/static/', // required so crawlers can render JS/CSS for indexing
           '/_next/image/',  // Next.js image optimizer
           '/favicon.ico',
-          '/icons/',
+          '/icon.png',
+          '/apple-icon.png',
           '/images/',
         ],
         disallow: '/',
