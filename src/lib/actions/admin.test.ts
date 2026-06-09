@@ -128,6 +128,7 @@ describe('admin recipe moderation actions', () => {
       data: { coverImageStatus: 'approved' },
     })
     expect(mockRevalidatePath).toHaveBeenCalledWith('/recipes/lemon-pasta')
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/recipes/lemon-pasta/edit')
     expect(mockRevalidatePath).toHaveBeenCalledWith('/admin/images')
   })
 
@@ -148,6 +149,7 @@ describe('admin recipe moderation actions', () => {
       where: { id: 'recipe-1' },
       data: { coverImageStatus: 'rejected' },
     })
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/recipes/lemon-pasta/edit')
     expect(mockRevalidatePath).toHaveBeenCalledWith('/admin/images')
   })
 })

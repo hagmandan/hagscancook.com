@@ -88,6 +88,7 @@ export async function approveRecipeImage(
     data: { coverImageStatus: 'approved' },
   })
   revalidatePath(`/recipes/${recipe.slug}`)
+  revalidatePath(`/recipes/${recipe.slug}/edit`)
   revalidatePath('/admin/images')
   return { ok: true }
 }
@@ -110,6 +111,7 @@ export async function rejectRecipeImage(
     where: { id: recipeId },
     data: { coverImageStatus: 'rejected' },
   })
+  revalidatePath(`/recipes/${recipe.slug}/edit`)
   revalidatePath('/admin/images')
   return { ok: true }
 }
