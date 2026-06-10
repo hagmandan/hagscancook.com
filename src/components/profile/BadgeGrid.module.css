@@ -56,6 +56,7 @@
 }
 
 .progress {
+  display: none;
   font-size: 0.8125rem;
   color: var(--color-text-3);
   margin: 0.25rem 0 0;
@@ -65,4 +66,14 @@
   font-size: 0.8125rem;
   color: var(--color-text-3);
   margin: 0;
+}
+
+@media (min-width: 640px) {
+  .grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .progress {
+    display: block;
+  }
 }
