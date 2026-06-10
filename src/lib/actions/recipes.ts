@@ -23,6 +23,7 @@ import { generateUniqueSlug } from '@/lib/utils/slugify'
 import { resolveIngredient } from '@/lib/ingredients'
 import { captureException } from '@/lib/monitoring/errors'
 import { FEED_PAGE_SIZE } from '@/lib/constants/pagination'
+import { checkAndAwardBadges, type NewBadge } from '@/lib/badges'
 
 // ---------------------------------------------------------------------------
 // createRecipe
@@ -43,7 +44,7 @@ import { FEED_PAGE_SIZE } from '@/lib/constants/pagination'
 export async function createRecipe(
   formData: RecipeFormValues,
   publish = false
-): Promise<{ slug: string } | { error: string }> {
+): Promise<{ slug: string; newBadges: NewBadge[] } | { error: string }> {
   const session = await requireSession()
 
   const parsed = RecipeSchema.safeParse(formData)
@@ -99,11 +100,15 @@ export async function createRecipe(
       select: { slug: true },
     })
 
+    const newBadges = publish
+      ? await checkAndAwardBadges(session.userId, 'RECIPE_AUTHOR')
+      : []
+
     revalidatePath('/')
     revalidatePath('/recipes')
     revalidatePath('/my-recipes')
 
-    return { slug: recipe.slug }
+    return { slug: recipe.slug, newBadges }
   } catch (err) {
     captureException(err, {
       feature: 'recipe-form',
@@ -136,7 +141,7 @@ export async function updateRecipe(
   recipeId: string,
   formData: RecipeFormValues,
   publish = false
-): Promise<{ slug: string } | { error: string }> {
+): Promise<{ slug: string; newBadges: NewBadge[] } | { error: string }> {
   const session = await requireSession()
 
   const existing = await db.recipe.findUnique({
@@ -218,12 +223,16 @@ export async function updateRecipe(
       }),
     ])
 
+    const newBadges = publish
+      ? await checkAndAwardBadges(session.userId, 'RECIPE_AUTHOR')
+      : []
+
     revalidatePath('/')
     revalidatePath('/recipes')
     revalidatePath(`/recipes/${slug}`)
     revalidatePath('/my-recipes')
 
-    return { slug }
+    return { slug, newBadges }
   } catch (err) {
     captureException(err, {
       feature: 'recipe-form',

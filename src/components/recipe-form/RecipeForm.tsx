@@ -19,6 +19,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { RecipeSchema, type RecipeFormValues } from '@/lib/schemas/recipe'
 import { createRecipe, updateRecipe } from '@/lib/actions/recipes'
 import { useToast } from '@/lib/toast'
+import { tierLabel, badgeLabel, badgeSubtitle } from '@/lib/badges'
 import { FormHeader } from './FormHeader'
 import { ChefMode } from './ChefMode'
 import { GuidedMode } from './GuidedMode'
@@ -82,6 +83,10 @@ export function RecipeForm({ initialValues, recipeId, initialStatus = 'draft', c
       toast.error('Error', result.error)
       return
     }
+
+    result.newBadges.forEach((b) =>
+      toast.success(`${tierLabel(b.tier)} unlocked — ${badgeLabel(b.badgeType)}`, badgeSubtitle(b))
+    )
 
     router.push(`/recipes/${result.slug}`)
   }

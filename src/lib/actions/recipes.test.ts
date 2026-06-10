@@ -41,6 +41,10 @@ vi.mock('@/lib/ingredients', () => ({
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('next/navigation', () => ({ redirect: vi.fn() }))
 
+vi.mock('@/lib/badges', () => ({
+  checkAndAwardBadges: vi.fn().mockResolvedValue([]),
+}))
+
 import { createRecipe, loadMoreRecipes, toggleRecipeStatus, updateRecipe } from './recipes'
 import { requireSession } from '@/lib/auth'
 import { db } from '@/lib/db'
@@ -127,7 +131,7 @@ describe('createRecipe', () => {
   it('creates a draft recipe with normalized nested payload', async () => {
     const result = await createRecipe(validRecipeForm)
 
-    expect(result).toEqual({ slug: 'lemon-pasta' })
+    expect(result).toEqual({ slug: 'lemon-pasta', newBadges: [] })
     expect(mockGenerateUniqueSlug).toHaveBeenCalledWith('Lemon Pasta')
     expect(mockResolveIngredient).toHaveBeenCalledWith('pasta', '')
     expect(mockCreate).toHaveBeenCalledWith({
@@ -313,7 +317,7 @@ describe('updateRecipe', () => {
 
     const result = await updateRecipe('recipe-1', validRecipeForm, true)
 
-    expect(result).toEqual({ slug: 'lemon-pasta' })
+    expect(result).toEqual({ slug: 'lemon-pasta', newBadges: [] })
     expect(mockGenerateUniqueSlug).toHaveBeenCalledWith('Lemon Pasta', 'recipe-1')
     expect(mockStepDeleteMany).toHaveBeenCalledWith({ where: { recipeId: 'recipe-1' } })
     expect(mockRecipeIngredientDeleteMany).toHaveBeenCalledWith({ where: { recipeId: 'recipe-1' } })
