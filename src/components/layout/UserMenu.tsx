@@ -13,6 +13,7 @@
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from './Providers'
+import { UserAvatar } from '@/components/ui/UserAvatar'
 import styles from './UserMenu.module.css'
 
 export function UserMenu() {
@@ -62,20 +63,14 @@ export function UserMenu() {
             setIsOpen((open) => !open)
           }}
         >
-          {user.photoURL ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={user.photoURL}
-              alt={user.displayName ?? 'User avatar'}
-              className={styles.avatar}
-              width={32}
-              height={32}
-            />
-          ) : (
-            <span className={styles.avatarFallback}>
-              {(user.displayName ?? user.email ?? 'U')[0].toUpperCase()}
-            </span>
-          )}
+          <UserAvatar
+            photoURL={user.photoURL}
+            displayName={user.displayName}
+            email={user.email}
+            size={32}
+            className={styles.avatar}
+            fallbackClassName={styles.avatarFallback}
+          />
           <span className={styles.displayName}>{user.displayName}</span>
         </summary>
 

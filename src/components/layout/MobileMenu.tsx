@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { useAuth } from './Providers'
+import { UserAvatar } from '@/components/ui/UserAvatar'
 import styles from './MobileMenu.module.css'
 
 export function MobileMenu() {
@@ -37,19 +38,15 @@ export function MobileMenu() {
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
       >
-        {!loading && user?.photoURL ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={user.photoURL}
+        {!loading && user ? (
+          <UserAvatar
+            photoURL={user.photoURL}
+            displayName={user.displayName}
+            size={28}
             alt={user.displayName ?? 'Menu'}
             className={styles.hamburgerAvatar}
-            width={28}
-            height={28}
+            fallbackClassName={styles.hamburgerFallback}
           />
-        ) : !loading && user?.displayName ? (
-          <span className={styles.hamburgerFallback}>
-            {user.displayName[0].toUpperCase()}
-          </span>
         ) : (
           <>
             <span />
@@ -75,20 +72,14 @@ export function MobileMenu() {
           >
             {!loading && user && (
               <div className={styles.drawerUser}>
-                {user.photoURL ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={user.photoURL}
-                    alt={user.displayName ?? 'User avatar'}
-                    className={styles.drawerAvatar}
-                    width={36}
-                    height={36}
-                  />
-                ) : (
-                  <span className={styles.drawerAvatarFallback}>
-                    {(user.displayName ?? user.email ?? 'U')[0].toUpperCase()}
-                  </span>
-                )}
+                <UserAvatar
+                  photoURL={user.photoURL}
+                  displayName={user.displayName}
+                  email={user.email}
+                  size={36}
+                  className={styles.drawerAvatar}
+                  fallbackClassName={styles.drawerAvatarFallback}
+                />
                 <span className={styles.drawerName}>{user.displayName}</span>
               </div>
             )}

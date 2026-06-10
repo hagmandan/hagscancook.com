@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { deleteRecipe } from '@/lib/actions/recipes'
 import { useToast } from '@/lib/toast'
 import { StatusToggle } from '@/components/recipe/StatusToggle'
+import { ConfirmButton } from '@/components/ui/ConfirmButton'
 import styles from './my-recipes.module.css'
 
 interface RecipeRowActionsProps {
@@ -14,7 +15,6 @@ interface RecipeRowActionsProps {
 }
 
 export function RecipeRowActions({ recipeId, recipeSlug, status }: RecipeRowActionsProps) {
-  const [confirming, setConfirming] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const toast = useToast()
 
@@ -26,31 +26,7 @@ export function RecipeRowActions({ recipeId, recipeSlug, status }: RecipeRowActi
     if ('error' in result) {
       toast.error('Error', 'Could not delete recipe')
       setDeleting(false)
-      setConfirming(false)
     }
-  }
-
-  if (confirming) {
-    return (
-      <div className={styles.confirmRow}>
-        <span className={styles.confirmText}>Delete this recipe?</span>
-        <button
-          onClick={handleDelete}
-          disabled={deleting}
-          className={styles.confirmYes}
-          type="button"
-        >
-          {deleting ? 'Deleting…' : 'Yes, delete'}
-        </button>
-        <button
-          onClick={() => setConfirming(false)}
-          className={styles.confirmNo}
-          type="button"
-        >
-          Cancel
-        </button>
-      </div>
-    )
   }
 
   return (
@@ -62,13 +38,16 @@ export function RecipeRowActions({ recipeId, recipeSlug, status }: RecipeRowActi
         Edit
       </Link>
       <StatusToggle recipeId={recipeId} currentStatus={status} />
-      <button
-        onClick={() => setConfirming(true)}
-        className={styles.deleteButton}
-        type="button"
-      >
-        Delete
-      </button>
+      <ConfirmButton
+        label="Delete"
+        confirmQuestion="Delete this recipe?"
+        confirmLabel="Yes, delete"
+        cancelLabel="Cancel"
+        onConfirm={handleDelete}
+        isPending={deleting}
+        pendingLabel="Deleting…"
+        danger
+      />
     </div>
   )
 }
