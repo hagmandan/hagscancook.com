@@ -12,7 +12,7 @@ vi.mock('next/link', () => ({
 }))
 
 vi.mock('next/image', () => ({
-  default: ({ src, alt, ...props }: ImgHTMLAttributes<HTMLImageElement> & { src: string }) => (
+  default: ({ src, alt, fill: _fill, ...props }: ImgHTMLAttributes<HTMLImageElement> & { src: string; fill?: boolean }) => (
     // eslint-disable-next-line @next/next/no-img-element
     <img src={src} alt={alt} {...props} />
   ),
