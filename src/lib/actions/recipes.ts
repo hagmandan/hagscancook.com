@@ -13,13 +13,14 @@
 
 'use server'
 
-import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { requireSession } from '@/lib/auth'
 import type { Prisma } from '@prisma/client'
 import { RecipeSchema, type RecipeFormValues } from '@/lib/schemas/recipe'
+import { parseOrError } from '@/lib/schemas/validation'
 import { generateUniqueSlug } from '@/lib/utils/slugify'
+import { revalidateRecipeFeeds } from '@/lib/utils/revalidation'
 import { resolveIngredient } from '@/lib/ingredients'
 import { captureException } from '@/lib/monitoring/errors'
 import { FEED_PAGE_SIZE } from '@/lib/constants/pagination'
@@ -47,12 +48,9 @@ export async function createRecipe(
 ): Promise<{ slug: string; newBadges: NewBadge[] } | { error: string }> {
   const session = await requireSession()
 
-  const parsed = RecipeSchema.safeParse(formData)
-  if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? 'Invalid recipe data' }
-  }
-
-  const data = parsed.data
+  const result = parseOrError(RecipeSchema, formData, 'Invalid recipe data')
+  if ('error' in result) return result
+  const data = result.data
   const slug = await generateUniqueSlug(data.title)
 
   // Resolve ingredient IDs (find or create canonical ingredients)
@@ -104,9 +102,7 @@ export async function createRecipe(
       ? await checkAndAwardBadges(session.userId, 'RECIPE_AUTHOR')
       : []
 
-    revalidatePath('/')
-    revalidatePath('/recipes')
-    revalidatePath('/my-recipes')
+    revalidateRecipeFeeds()
 
     return { slug: recipe.slug, newBadges }
   } catch (err) {
@@ -154,12 +150,9 @@ export async function updateRecipe(
     return { error: 'Not authorised to edit this recipe' }
   }
 
-  const parsed = RecipeSchema.safeParse(formData)
-  if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? 'Invalid recipe data' }
-  }
-
-  const data = parsed.data
+  const result = parseOrError(RecipeSchema, formData, 'Invalid recipe data')
+  if ('error' in result) return result
+  const data = result.data
 
   // Re-generate slug only if title changed
   const slug =
@@ -227,10 +220,7 @@ export async function updateRecipe(
       ? await checkAndAwardBadges(session.userId, 'RECIPE_AUTHOR')
       : []
 
-    revalidatePath('/')
-    revalidatePath('/recipes')
-    revalidatePath(`/recipes/${slug}`)
-    revalidatePath('/my-recipes')
+    revalidateRecipeFeeds(slug)
 
     return { slug, newBadges }
   } catch (err) {
@@ -277,10 +267,7 @@ export async function deleteRecipe(
       data: { deletedAt: new Date() },
     })
 
-    revalidatePath('/')
-    revalidatePath('/recipes')
-    revalidatePath(`/recipes/${existing.slug}`)
-    revalidatePath('/my-recipes')
+    revalidateRecipeFeeds(existing.slug)
   } catch (err) {
     captureException(err, {
       feature: 'recipe-form',
@@ -407,10 +394,7 @@ export async function toggleRecipeStatus(
       data: { status: newStatus },
     })
 
-    revalidatePath('/')
-    revalidatePath('/my-recipes')
-    revalidatePath(`/recipes/${existing.slug}`)
-    revalidatePath('/recipes')
+    revalidateRecipeFeeds(existing.slug)
 
     return { status: newStatus }
   } catch (err) {
