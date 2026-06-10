@@ -29,8 +29,11 @@ export function ConfirmButton({
   const [confirming, setConfirming] = useState(false)
 
   async function handleConfirm() {
-    await onConfirm()
-    setConfirming(false)
+    try {
+      await onConfirm()
+    } finally {
+      setConfirming(false)
+    }
   }
 
   if (confirming) {

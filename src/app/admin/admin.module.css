@@ -152,6 +152,7 @@
   border: 1px solid var(--color-border);
   background-color: var(--color-surface);
   color: var(--color-text-2);
+  text-decoration: none;
   transition: background-color 0.1s ease;
 }
 

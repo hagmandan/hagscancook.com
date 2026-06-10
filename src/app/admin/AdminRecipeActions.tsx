@@ -43,7 +43,7 @@ export function AdminRecipeActions({ recipeId, recipeSlug, status }: AdminRecipe
 
   return (
     <span className={styles.actionRow}>
-      <a href={`/recipes/${recipeSlug}/edit`} className={styles.actionBtn} style={{ textDecoration: 'none' }}>Edit</a>
+      <a href={`/recipes/${recipeSlug}/edit`} className={styles.actionBtn}>Edit</a>
       {status === 'published' && (
         <button onClick={handleUnpublish} disabled={isPending} className={styles.actionBtn} type="button">
           Unpublish
