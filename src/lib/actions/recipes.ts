@@ -145,7 +145,7 @@ export async function updateRecipe(
   const session = await requireSession()
 
   const existing = await db.recipe.findUnique({
-    where: { id: recipeId },
+    where: { id: recipeId, deletedAt: null },
     select: { authorId: true, slug: true, title: true, coverImageUrl: true },
   })
 
@@ -262,7 +262,7 @@ export async function deleteRecipe(
   const session = await requireSession()
 
   const existing = await db.recipe.findUnique({
-    where: { id: recipeId },
+    where: { id: recipeId, deletedAt: null },
     select: { authorId: true, slug: true },
   })
 
@@ -380,7 +380,7 @@ export async function loadMoreRecipes(
 
 /**
  * Flips a recipe's status between draft and published.
- * Only the recipe's author can call this.
+ * The recipe's author or an admin can call this.
  *
  * @param recipeId - The recipe's UUID
  */
@@ -390,7 +390,7 @@ export async function toggleRecipeStatus(
   const session = await requireSession()
 
   const existing = await db.recipe.findUnique({
-    where: { id: recipeId },
+    where: { id: recipeId, deletedAt: null },
     select: { authorId: true, slug: true, status: true },
   })
 
