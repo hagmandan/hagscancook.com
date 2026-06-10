@@ -27,13 +27,11 @@ async function getCount(userId: string, badgeType: BadgeType): Promise<number> {
         where: { recipe: { authorId: userId, deletedAt: null } },
       })
     case 'HIT_MAKER': {
-      const recipeIds = await db.recipe
-        .findMany({ where: { authorId: userId, status: 'published', deletedAt: null }, select: { id: true } })
-        .then((rows) => rows.map((r) => r.id))
-      if (recipeIds.length === 0) return 0
       const groups = await db.favorite.groupBy({
         by: ['recipeId'],
-        where: { recipeId: { in: recipeIds } },
+        where: {
+          recipe: { authorId: userId, status: 'published', deletedAt: null },
+        },
         _count: { _all: true },
       })
       return groups.reduce((acc, g) => Math.max(acc, g._count._all), 0)

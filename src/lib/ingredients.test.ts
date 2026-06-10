@@ -52,7 +52,10 @@ describe('resolveIngredient', () => {
 
   it('falls back to the produce type when no type id is provided', async () => {
     mockIngredientFindFirst.mockResolvedValue(null)
-    mockIngredientTypeFindFirst.mockResolvedValueOnce({ id: 'type-produce' })
+    // Both queries run in parallel: produce lookup returns a match, first-type also returns one
+    mockIngredientTypeFindFirst
+      .mockResolvedValueOnce({ id: 'type-produce' })  // produce query
+      .mockResolvedValueOnce({ id: 'type-first' })    // first-type query (ignored — produce wins)
 
     await expect(resolveIngredient('Apples')).resolves.toBe('created-ingredient')
 
@@ -68,13 +71,14 @@ describe('resolveIngredient', () => {
 
   it('falls back to the first ingredient type when produce is missing', async () => {
     mockIngredientFindFirst.mockResolvedValue(null)
+    // Both queries run in parallel: produce returns null, first-type returns a match
     mockIngredientTypeFindFirst
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce({ id: 'type-first' })
+      .mockResolvedValueOnce(null)                    // produce query
+      .mockResolvedValueOnce({ id: 'type-first' })    // first-type query
 
     await expect(resolveIngredient('Apples')).resolves.toBe('created-ingredient')
 
-    expect(mockIngredientTypeFindFirst).toHaveBeenNthCalledWith(2, {
+    expect(mockIngredientTypeFindFirst).toHaveBeenCalledWith({
       select: { id: true },
     })
     expect(mockIngredientCreate).toHaveBeenCalledWith({
