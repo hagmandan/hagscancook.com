@@ -45,12 +45,13 @@ vi.mock('@/lib/badges', () => ({
   checkAndAwardBadges: vi.fn().mockResolvedValue([]),
 }))
 
-import { createRecipe, loadMoreRecipes, toggleRecipeStatus, updateRecipe } from './recipes'
+import { createRecipe, deleteRecipe, loadMoreRecipes, toggleRecipeStatus, updateRecipe } from './recipes'
 import { requireSession } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { resolveIngredient } from '@/lib/ingredients'
 import { generateUniqueSlug } from '@/lib/utils/slugify'
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { captureException } from '@/lib/monitoring/errors'
 import type { RecipeFormValues } from '@/lib/schemas/recipe'
 
@@ -208,6 +209,30 @@ describe('createRecipe', () => {
         }),
       })
     )
+  })
+
+  it('captures db failures and returns a user-facing error', async () => {
+    const error = new Error('db timeout')
+    mockCreate.mockRejectedValue(error)
+
+    const result = await createRecipe(validRecipeForm)
+
+    expect(result).toEqual({ error: 'Failed to save recipe. Please try again.' })
+    expect(vi.mocked(captureException)).toHaveBeenCalledWith(error, expect.objectContaining({
+      feature: 'recipe-form',
+      operation: 'create',
+    }))
+  })
+
+  it('labels the captured error as publish when publish flag is set', async () => {
+    const error = new Error('db timeout')
+    mockCreate.mockRejectedValue(error)
+
+    await createRecipe(validRecipeForm, true)
+
+    expect(vi.mocked(captureException)).toHaveBeenCalledWith(error, expect.objectContaining({
+      operation: 'publish',
+    }))
   })
 })
 
@@ -419,6 +444,112 @@ describe('updateRecipe', () => {
         data: expect.objectContaining({ coverImageStatus: null }),
       })
     )
+  })
+
+  it('returns not found when the recipe does not exist', async () => {
+    mockFindUnique.mockResolvedValue(null)
+
+    const result = await updateRecipe('recipe-1', validRecipeForm)
+
+    expect(result).toEqual({ error: 'Recipe not found' })
+    expect(mockTransaction).not.toHaveBeenCalled()
+  })
+
+  it('returns a validation error without writing', async () => {
+    mockFindUnique.mockResolvedValue({ authorId: 'user-1', slug: 'old-slug', title: 'Old Title', coverImageUrl: null })
+
+    const result = await updateRecipe('recipe-1', { ...validRecipeForm, title: '' })
+
+    expect(result).toEqual({ error: 'Title is required' })
+    expect(mockTransaction).not.toHaveBeenCalled()
+  })
+
+  it('captures db failures and returns a user-facing error', async () => {
+    mockFindUnique.mockResolvedValue({ authorId: 'user-1', slug: 'lemon-pasta', title: 'Lemon Pasta', coverImageUrl: null })
+    const error = new Error('tx failed')
+    mockTransaction.mockRejectedValue(error)
+
+    const result = await updateRecipe('recipe-1', validRecipeForm)
+
+    expect(result).toEqual({ error: 'Failed to save recipe. Please try again.' })
+    expect(vi.mocked(captureException)).toHaveBeenCalledWith(error, expect.objectContaining({
+      feature: 'recipe-form',
+      operation: 'update',
+    }))
+  })
+
+  it('labels the captured error as publish when publish flag is set', async () => {
+    mockFindUnique.mockResolvedValue({ authorId: 'user-1', slug: 'lemon-pasta', title: 'Lemon Pasta', coverImageUrl: null })
+    const error = new Error('tx failed')
+    mockTransaction.mockRejectedValue(error)
+
+    await updateRecipe('recipe-1', validRecipeForm, true)
+
+    expect(vi.mocked(captureException)).toHaveBeenCalledWith(error, expect.objectContaining({
+      operation: 'publish',
+    }))
+  })
+})
+
+describe('deleteRecipe', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockRequireSession.mockResolvedValue({ userId: 'user-1', role: 'user' })
+    mockFindUnique.mockResolvedValue({ authorId: 'user-1', slug: 'lemon-pasta' })
+    mockRecipeUpdate.mockResolvedValue({})
+  })
+
+  it('returns not found when the recipe does not exist', async () => {
+    mockFindUnique.mockResolvedValue(null)
+
+    const result = await deleteRecipe('recipe-1')
+
+    expect(result).toEqual({ error: 'Recipe not found' })
+    expect(mockRecipeUpdate).not.toHaveBeenCalled()
+  })
+
+  it('blocks deletion by non-authors', async () => {
+    mockFindUnique.mockResolvedValue({ authorId: 'other-user', slug: 'lemon-pasta' })
+
+    const result = await deleteRecipe('recipe-1')
+
+    expect(result).toEqual({ error: 'Not authorised to delete this recipe' })
+    expect(mockRecipeUpdate).not.toHaveBeenCalled()
+  })
+
+  it('soft-deletes the recipe and redirects', async () => {
+    await deleteRecipe('recipe-1')
+
+    expect(mockRecipeUpdate).toHaveBeenCalledWith({
+      where: { id: 'recipe-1' },
+      data: { deletedAt: expect.any(Date) },
+    })
+    expect(vi.mocked(revalidatePath)).toHaveBeenCalledWith('/my-recipes')
+    expect(vi.mocked(redirect)).toHaveBeenCalledWith('/my-recipes')
+  })
+
+  it('allows admin to delete any recipe', async () => {
+    mockRequireSession.mockResolvedValue({ userId: 'admin-user', role: 'admin' })
+    mockFindUnique.mockResolvedValue({ authorId: 'other-user', slug: 'lemon-pasta' })
+
+    await deleteRecipe('recipe-1')
+
+    expect(mockRecipeUpdate).toHaveBeenCalled()
+  })
+
+  it('captures db failures and returns a user-facing error', async () => {
+    const error = new Error('db timeout')
+    mockRecipeUpdate.mockRejectedValue(error)
+
+    const result = await deleteRecipe('recipe-1')
+
+    expect(result).toEqual({ error: 'Failed to delete recipe. Please try again.' })
+    expect(vi.mocked(captureException)).toHaveBeenCalledWith(error, {
+      feature: 'recipe-form',
+      operation: 'delete',
+      recipeId: 'recipe-1',
+      runtime: 'server',
+    })
   })
 })
 
