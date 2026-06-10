@@ -25,6 +25,10 @@ vi.mock('@/lib/monitoring/errors', () => ({
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 
+vi.mock('@/lib/badges', () => ({
+  checkAndAwardBadges: vi.fn().mockResolvedValue([]),
+}))
+
 import { revalidatePath } from 'next/cache'
 import { requireSession } from '@/lib/auth'
 import { db } from '@/lib/db'
@@ -90,6 +94,7 @@ describe('addPantryItem', () => {
         ingredient: { id: 'ingredient-1', name: 'flour' },
         type: { id: 'type-1', name: 'Baking', slug: 'baking' },
       },
+      newBadges: [],
     })
     expect(mockResolveIngredient).toHaveBeenCalledWith('flour', 'type-1')
     expect(mockUpsert).toHaveBeenCalledWith({
