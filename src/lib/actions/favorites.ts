@@ -45,7 +45,7 @@ export async function toggleFavorite(
     }
 
     const recipe = await db.recipe.findUnique({
-      where: { id: recipeId },
+      where: { id: recipeId, deletedAt: null },
       select: { authorId: true },
     })
 
@@ -56,16 +56,19 @@ export async function toggleFavorite(
     revalidatePath(`/recipes/${recipeSlug}`)
     revalidatePath('/favorites')
 
+    if (!recipe) {
+      return { favorited: true, newBadges: [] }
+    }
+
+    const isOwnRecipe = recipe.authorId === session.userId
+
     // Award badges to the recipe's author.
     // Only include in the response when the current user IS the author —
     // otherwise the badge is awarded silently and the author sees it on
     // their profile next visit.
-    const isOwnRecipe = recipe?.authorId === session.userId
-    const authorId = recipe?.authorId ?? session.userId
-
     const [communityBadges, hitMakerBadges] = await Promise.all([
-      checkAndAwardBadges(authorId, 'COMMUNITY_FAVORITE'),
-      checkAndAwardBadges(authorId, 'HIT_MAKER'),
+      checkAndAwardBadges(recipe.authorId, 'COMMUNITY_FAVORITE'),
+      checkAndAwardBadges(recipe.authorId, 'HIT_MAKER'),
     ])
 
     const newBadges = isOwnRecipe ? [...communityBadges, ...hitMakerBadges] : []

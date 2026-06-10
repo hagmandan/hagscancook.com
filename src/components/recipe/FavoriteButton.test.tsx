@@ -10,6 +10,7 @@ vi.mock('@/lib/actions/favorites', () => ({
 vi.mock('@/lib/toast', () => ({
   useToast: vi.fn(() => ({
     error: vi.fn(),
+    success: vi.fn(),
   })),
 }))
 
