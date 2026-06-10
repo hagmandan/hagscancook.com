@@ -40,6 +40,22 @@ enum CoverImageStatus {
   rejected
 }
 
+enum BadgeType {
+  PANTRY_PIONEER
+  RECIPE_AUTHOR
+  COMMUNITY_FAVORITE
+  HIT_MAKER
+}
+
+enum BadgeTier {
+  IRON
+  BRONZE
+  SILVER
+  GOLD
+  PLATINUM
+  IRIDIUM
+}
+
 // ---------------------------------------------------------------------------
 // Users
 // ---------------------------------------------------------------------------
@@ -59,6 +75,7 @@ model User {
   recipes     Recipe[]
   favorites   Favorite[]
   pantryItems PantryItem[]
+  badges      UserBadge[]
 
   @@map("users")
 }
@@ -280,4 +297,23 @@ model PantryItem {
 
   @@unique([userId, ingredientId])
   @@map("pantry_items")
+}
+
+// ---------------------------------------------------------------------------
+// Badges
+// ---------------------------------------------------------------------------
+
+/** One row per earned tier per user per badge type. Never deleted — badges
+ *  are permanent once awarded. */
+model UserBadge {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  badgeType BadgeType @map("badge_type")
+  tier      BadgeTier
+  earnedAt  DateTime  @default(now()) @map("earned_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, badgeType, tier])
+  @@map("user_badges")
 }
