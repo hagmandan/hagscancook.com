@@ -6,6 +6,8 @@ export const metadata: Metadata = {
   description: 'Terms of Service for hags can cook.',
 }
 
+export const revalidate = false
+
 const UPDATED = 'June 9, 2026'
 
 export default function TermsPage() {
