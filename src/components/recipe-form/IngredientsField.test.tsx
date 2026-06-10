@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { useForm } from 'react-hook-form'
+import { useForm, FormProvider } from 'react-hook-form'
 import { IngredientsField } from './IngredientsField'
 import type { RecipeFormValues } from '@/lib/schemas/recipe'
 // @ts-expect-error — test helpers added to the manual mock
@@ -17,8 +17,9 @@ vi.mock('@dnd-kit/utilities')
 vi.mock('./IngredientsField.module.css', () => ({
   default: {
     root: 'root',
-    columnLabels: 'columnLabels',
-    label: 'label',
+    table: 'table',
+    thHandle: 'thHandle',
+    thRemove: 'thRemove',
     requiredMark: 'requiredMark',
     labelOptional: 'labelOptional',
     row: 'row',
@@ -31,7 +32,6 @@ vi.mock('./IngredientsField.module.css', () => ({
     groupInput: 'groupInput',
     typeSelect: 'typeSelect',
     removeButton: 'removeButton',
-    rowErrors: 'rowErrors',
     error: 'error',
     addButton: 'addButton',
   },
@@ -70,7 +70,7 @@ function TestIngredientsField({
   })
 
   return (
-    <>
+    <FormProvider {...form}>
       <button
         type="button"
         onClick={() => {
@@ -80,8 +80,8 @@ function TestIngredientsField({
       >
         set errors
       </button>
-      <IngredientsField form={form} ingredientTypes={ingredientTypes} />
-    </>
+      <IngredientsField ingredientTypes={ingredientTypes} />
+    </FormProvider>
   )
 }
 

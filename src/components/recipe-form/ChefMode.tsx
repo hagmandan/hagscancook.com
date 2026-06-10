@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { type UseFormReturn } from 'react-hook-form'
+import { useFormContext } from 'react-hook-form'
 import { useTitleAvailability } from '@/lib/hooks/useTitleAvailability'
 import type { RecipeFormValues } from '@/lib/schemas/recipe'
 import { LIMITS } from '@/lib/schemas/recipe'
@@ -16,7 +16,6 @@ import { useCoverUpload } from './useCoverUpload'
 import styles from './ChefMode.module.css'
 
 interface ChefModeProps {
-  form: UseFormReturn<RecipeFormValues>
   tags: { id: string; name: string }[]
   ingredientTypes: { id: string; name: string }[]
   recipeId?: string
@@ -28,8 +27,8 @@ interface ChefModeProps {
 const dietaryOptions = DIETARY_RESTRICTIONS.map((d) => ({ label: d, value: d }))
 const cookingMethodOptions = COOKING_METHODS.map((m) => ({ label: m, value: m }))
 
-export function ChefMode({ form, tags, ingredientTypes, recipeId, coverImageStatus, consentGiven, onConsentChange }: ChefModeProps) {
-  const { register, watch, setValue, formState: { errors } } = form
+export function ChefMode({ tags, ingredientTypes, recipeId, coverImageStatus, consentGiven, onConsentChange }: ChefModeProps) {
+  const { register, watch, setValue, formState: { errors } } = useFormContext<RecipeFormValues>()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { isUploading, uploadError, fileInputRef, handleCoverUpload } = useCoverUpload(setValue)
   const coverImageUrl = watch('coverImageUrl')
@@ -139,13 +138,13 @@ export function ChefMode({ form, tags, ingredientTypes, recipeId, coverImageStat
         {/* Ingredients */}
         <section className={styles.section}>
           <h2 className={styles.sectionHeading}>Ingredients</h2>
-          <IngredientsField form={form} ingredientTypes={ingredientTypes} />
+          <IngredientsField ingredientTypes={ingredientTypes} />
         </section>
 
         {/* Steps */}
         <section className={styles.section}>
           <h2 className={styles.sectionHeading}>Steps</h2>
-          <StepsField form={form} />
+          <StepsField />
         </section>
       </div>
 

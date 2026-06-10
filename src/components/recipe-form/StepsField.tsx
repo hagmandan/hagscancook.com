@@ -3,18 +3,14 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { SortableList } from './SortableList'
-import { useFieldArray, useWatch, type UseFormReturn, type Control } from 'react-hook-form'
+import { useFieldArray, useFormContext, useWatch, type UseFormReturn, type Control } from 'react-hook-form'
 import type { RecipeFormValues } from '@/lib/schemas/recipe'
 import { LIMITS } from '@/lib/schemas/recipe'
 import { CharCounter } from '@/components/ui/CharCounter'
 import styles from './StepsField.module.css'
 
-interface StepsFieldProps {
-  form: UseFormReturn<RecipeFormValues>
-}
-
-export function StepsField({ form }: StepsFieldProps) {
-  const { control, register, formState: { errors } } = form
+export function StepsField() {
+  const { control, register, formState: { errors } } = useFormContext<RecipeFormValues>()
 
   const { fields, append, remove, move } = useFieldArray({
     control,
@@ -24,17 +20,19 @@ export function StepsField({ form }: StepsFieldProps) {
   return (
     <div className={styles.root}>
       <SortableList fields={fields} onMove={move}>
-        {fields.map((field, index) => (
-          <SortableStep
-            key={field.id}
-            id={field.id}
-            index={index}
-            control={control}
-            register={register}
-            error={errors.steps?.[index]?.content?.message}
-            onRemove={() => remove(index)}
-          />
-        ))}
+        <ol className={styles.list}>
+          {fields.map((field, index) => (
+            <SortableStep
+              key={field.id}
+              id={field.id}
+              index={index}
+              control={control}
+              register={register}
+              error={errors.steps?.[index]?.content?.message}
+              onRemove={() => remove(index)}
+            />
+          ))}
+        </ol>
       </SortableList>
 
       <button
@@ -80,7 +78,7 @@ function SortableStep({ id, index, control, register, error, onRemove }: Sortabl
   }
 
   return (
-    <div ref={setNodeRef} style={style} className={styles.row}>
+    <li ref={setNodeRef} style={style} className={styles.row}>
       <button
         type="button"
         className={styles.handle}
@@ -114,6 +112,6 @@ function SortableStep({ id, index, control, register, error, onRemove }: Sortabl
       >
         ✕
       </button>
-    </div>
+    </li>
   )
 }

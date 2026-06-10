@@ -6,7 +6,7 @@ import { simulateDragEnd } from '@dnd-kit/core'
 import { getSortableItems } from '@dnd-kit/sortable'
 import type { DragEndEvent } from '@dnd-kit/core'
 import userEvent from '@testing-library/user-event'
-import { useForm } from 'react-hook-form'
+import { useForm, FormProvider } from 'react-hook-form'
 import { StepsField } from './StepsField'
 import type { RecipeFormValues } from '@/lib/schemas/recipe'
 
@@ -17,6 +17,7 @@ vi.mock('@dnd-kit/utilities')
 vi.mock('./StepsField.module.css', () => ({
   default: {
     root: 'root',
+    list: 'list',
     row: 'row',
     handle: 'handle',
     stepNum: 'stepNum',
@@ -42,15 +43,15 @@ function TestStepsField({
   })
 
   return (
-    <>
+    <FormProvider {...form}>
       <button
         type="button"
         onClick={() => form.setError('steps.0.content', { message: 'Step content is required' })}
       >
         set error
       </button>
-      <StepsField form={form} />
-    </>
+      <StepsField />
+    </FormProvider>
   )
 }
 
