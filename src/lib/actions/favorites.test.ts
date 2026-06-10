@@ -7,7 +7,14 @@ vi.mock('@/lib/db', () => ({
       create: vi.fn(),
       delete: vi.fn(),
     },
+    recipe: {
+      findUnique: vi.fn(),
+    },
   },
+}))
+
+vi.mock('@/lib/badges', () => ({
+  checkAndAwardBadges: vi.fn().mockResolvedValue([]),
 }))
 
 vi.mock('@/lib/auth', () => ({
@@ -24,14 +31,17 @@ import { revalidatePath } from 'next/cache'
 import { requireSession } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { captureException } from '@/lib/monitoring/errors'
+import { checkAndAwardBadges } from '@/lib/badges'
 import { toggleFavorite } from './favorites'
 
 const mockRequireSession = vi.mocked(requireSession)
 const mockFindUnique = vi.mocked(db.favorite.findUnique)
+const mockRecipeFindUnique = vi.mocked(db.recipe.findUnique)
 const mockCreate = vi.mocked(db.favorite.create)
 const mockDelete = vi.mocked(db.favorite.delete)
 const mockRevalidatePath = vi.mocked(revalidatePath)
 const mockCaptureException = vi.mocked(captureException)
+const mockCheckAndAwardBadges = vi.mocked(checkAndAwardBadges)
 
 describe('toggleFavorite', () => {
   beforeEach(() => {
@@ -39,6 +49,8 @@ describe('toggleFavorite', () => {
     mockRequireSession.mockResolvedValue({ userId: 'user-1', role: 'user' })
     mockCreate.mockResolvedValue({})
     mockDelete.mockResolvedValue({})
+    mockRecipeFindUnique.mockResolvedValue({ authorId: 'author-1' })
+    mockCheckAndAwardBadges.mockResolvedValue([])
   })
 
   it('creates a favorite when one does not exist', async () => {
@@ -46,7 +58,7 @@ describe('toggleFavorite', () => {
 
     const result = await toggleFavorite('recipe-1', 'lemon-pasta')
 
-    expect(result).toEqual({ favorited: true })
+    expect(result).toEqual({ favorited: true, newBadges: [] })
     expect(mockFindUnique).toHaveBeenCalledWith({
       where: { userId_recipeId: { userId: 'user-1', recipeId: 'recipe-1' } },
       select: { userId: true },
@@ -64,7 +76,7 @@ describe('toggleFavorite', () => {
 
     const result = await toggleFavorite('recipe-1', 'lemon-pasta')
 
-    expect(result).toEqual({ favorited: false })
+    expect(result).toEqual({ favorited: false, newBadges: [] })
     expect(mockDelete).toHaveBeenCalledWith({
       where: { userId_recipeId: { userId: 'user-1', recipeId: 'recipe-1' } },
     })

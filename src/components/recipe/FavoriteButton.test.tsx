@@ -17,6 +17,12 @@ vi.mock('./FavoriteButton.module.css', () => ({
   default: { button: 'button', favorited: 'favorited', icon: 'icon' },
 }))
 
+vi.mock('@/lib/badges', () => ({
+  tierLabel: vi.fn((tier: string) => tier),
+  badgeLabel: vi.fn((type: string) => type),
+  badgeSubtitle: vi.fn(() => ''),
+}))
+
 import { toggleFavorite } from '@/lib/actions/favorites'
 import { useToast } from '@/lib/toast'
 
@@ -54,7 +60,7 @@ describe('FavoriteButton', () => {
   })
 
   it('calls toggleFavorite with recipe id and slug', async () => {
-    mockToggleFavorite.mockResolvedValue({ favorited: true })
+    mockToggleFavorite.mockResolvedValue({ favorited: true, newBadges: [] })
     render(<FavoriteButton recipeId="recipe-1" recipeSlug="lemon-pasta" initialFavorited={false} />)
 
     await clickAndFlushTransition(screen.getByRole('button', { name: 'Save to favorites' }))
@@ -65,7 +71,7 @@ describe('FavoriteButton', () => {
   })
 
   it('optimistically updates and then reflects the server result', async () => {
-    mockToggleFavorite.mockResolvedValue({ favorited: true })
+    mockToggleFavorite.mockResolvedValue({ favorited: true, newBadges: [] })
     render(<FavoriteButton recipeId="recipe-1" recipeSlug="lemon-pasta" initialFavorited={false} />)
 
     await clickAndFlushTransition(screen.getByRole('button', { name: 'Save to favorites' }))
