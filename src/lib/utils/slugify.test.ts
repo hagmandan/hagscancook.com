@@ -47,7 +47,7 @@ describe('generateUniqueSlug', () => {
     await expect(generateUniqueSlug('Lemon Pasta')).resolves.toBe('lemon-pasta')
 
     expect(mockFindUnique).toHaveBeenCalledWith({
-      where: { slug: 'lemon-pasta' },
+      where: { slug: 'lemon-pasta', deletedAt: null },
       select: { id: true },
     })
   })
@@ -61,11 +61,11 @@ describe('generateUniqueSlug', () => {
     await expect(generateUniqueSlug('Lemon Pasta')).resolves.toBe('lemon-pasta-3')
 
     expect(mockFindUnique).toHaveBeenNthCalledWith(2, {
-      where: { slug: 'lemon-pasta-2' },
+      where: { slug: 'lemon-pasta-2', deletedAt: null },
       select: { id: true },
     })
     expect(mockFindUnique).toHaveBeenNthCalledWith(3, {
-      where: { slug: 'lemon-pasta-3' },
+      where: { slug: 'lemon-pasta-3', deletedAt: null },
       select: { id: true },
     })
   })

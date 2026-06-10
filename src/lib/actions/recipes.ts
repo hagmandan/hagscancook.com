@@ -395,7 +395,7 @@ export async function toggleRecipeStatus(
   })
 
   if (!existing) return { error: 'Recipe not found' }
-  if (existing.authorId !== session.userId) {
+  if (existing.authorId !== session.userId && session.role !== 'admin') {
     return { error: 'Not authorised to update this recipe' }
   }
 

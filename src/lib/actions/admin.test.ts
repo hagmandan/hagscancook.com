@@ -107,6 +107,7 @@ describe('admin recipe moderation actions', () => {
       where: { id: 'recipe-1' },
       data: { deletedAt: expect.any(Date) },
     })
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/recipes/lemon-pasta')
     expect(mockRevalidatePath).toHaveBeenCalledWith('/admin')
   })
 

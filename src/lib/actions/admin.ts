@@ -27,7 +27,7 @@ export async function unpublishRecipe(
 ): Promise<{ ok: true } | { error: string }> {
   await requireAdmin()
   const recipe = await db.recipe.findUnique({
-    where: { id: recipeId },
+    where: { id: recipeId, deletedAt: null },
     select: { slug: true },
   })
   if (!recipe) return { error: 'Recipe not found' }
@@ -51,7 +51,7 @@ export async function adminDeleteRecipe(
 ): Promise<{ ok: true } | { error: string }> {
   await requireAdmin()
   const recipe = await db.recipe.findUnique({
-    where: { id: recipeId },
+    where: { id: recipeId, deletedAt: null },
     select: { slug: true },
   })
   if (!recipe) return { error: 'Recipe not found' }
@@ -60,6 +60,7 @@ export async function adminDeleteRecipe(
     where: { id: recipeId },
     data: { deletedAt: new Date() },
   })
+  revalidatePath(`/recipes/${recipe.slug}`)
   revalidatePath('/')
   revalidatePath('/recipes')
   revalidatePath('/admin')
@@ -78,7 +79,7 @@ export async function approveRecipeImage(
 ): Promise<{ ok: true } | { error: string }> {
   await requireAdmin()
   const recipe = await db.recipe.findUnique({
-    where: { id: recipeId },
+    where: { id: recipeId, deletedAt: null },
     select: { slug: true },
   })
   if (!recipe) return { error: 'Recipe not found' }
@@ -102,7 +103,7 @@ export async function rejectRecipeImage(
 ): Promise<{ ok: true } | { error: string }> {
   await requireAdmin()
   const recipe = await db.recipe.findUnique({
-    where: { id: recipeId },
+    where: { id: recipeId, deletedAt: null },
     select: { slug: true },
   })
   if (!recipe) return { error: 'Recipe not found' }

@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
   if (!slug) return NextResponse.json({ taken: false, slug: '' })
 
   const existing = await db.recipe.findUnique({
-    where: { slug },
+    where: { slug, deletedAt: null },
     select: { id: true },
   })
 

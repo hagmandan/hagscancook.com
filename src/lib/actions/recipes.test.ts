@@ -563,6 +563,16 @@ describe('toggleRecipeStatus', () => {
     expect(mockRecipeUpdate).not.toHaveBeenCalled()
   })
 
+  it('allows admin to toggle status on any recipe', async () => {
+    mockRequireSession.mockResolvedValue({ userId: 'admin-user', role: 'admin' })
+    mockFindUnique.mockResolvedValue({ authorId: 'other-user', slug: 'lemon-pasta', status: 'draft' })
+    mockRecipeUpdate.mockResolvedValue({})
+
+    await expect(toggleRecipeStatus('recipe-1')).resolves.toEqual({ status: 'published' })
+
+    expect(mockRecipeUpdate).toHaveBeenCalled()
+  })
+
   it('publishes draft recipes', async () => {
     mockFindUnique.mockResolvedValue({ authorId: 'user-1', slug: 'lemon-pasta', status: 'draft' })
     mockRecipeUpdate.mockResolvedValue({})

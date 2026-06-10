@@ -34,7 +34,7 @@ export async function generateUniqueSlug(
 
   const isAvailable = async (candidate: string) => {
     const existing = await db.recipe.findUnique({
-      where: { slug: candidate },
+      where: { slug: candidate, deletedAt: null },
       select: { id: true },
     })
     if (!existing) return true
