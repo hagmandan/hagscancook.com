@@ -18,7 +18,6 @@ import { requireSession } from '@/lib/auth'
 import { resolveIngredient } from '@/lib/ingredients'
 import { AddPantryItemSchema, UpdatePantryItemSchema } from '@/lib/schemas/pantry'
 import type { AddPantryItemInput, UpdatePantryItemInput } from '@/lib/schemas/pantry'
-import { parseOrError } from '@/lib/schemas/validation'
 import { captureException } from '@/lib/monitoring/errors'
 import { checkAndAwardBadges, type NewBadge } from '@/lib/badges'
 
@@ -79,9 +78,11 @@ export async function addPantryItem(
 ): Promise<{ item: PantryItemView; newBadges: NewBadge[] } | { error: string }> {
   const session = await requireSession()
 
-  const result = parseOrError(AddPantryItemSchema, input, 'Invalid pantry item')
-  if ('error' in result) return result
-  const data = result.data
+  const parsed = AddPantryItemSchema.safeParse(input)
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? 'Invalid pantry item' }
+  }
+  const data = parsed.data
 
   try {
     const ingredientId = await resolveIngredient(data.ingredientName, data.typeId)
@@ -160,9 +161,11 @@ export async function updatePantryItem(
 ): Promise<{ item: PantryItemView } | { error: string }> {
   const session = await requireSession()
 
-  const result = parseOrError(UpdatePantryItemSchema, input, 'Invalid pantry item')
-  if ('error' in result) return result
-  const data = result.data
+  const parsed = UpdatePantryItemSchema.safeParse(input)
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? 'Invalid pantry item' }
+  }
+  const data = parsed.data
 
   const existing = await db.pantryItem.findUnique({
     where: { id },

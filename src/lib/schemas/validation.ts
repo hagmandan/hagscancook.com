@@ -1,11 +1,11 @@
-import type { ZodSchema } from 'zod'
+import type { ZodType } from 'zod'
 
 /**
  * Runs safeParse and returns { data } on success or { error } on failure.
  * Extracts the first issue message, falling back to the provided default.
  */
 export function parseOrError<T>(
-  schema: ZodSchema<T>,
+  schema: ZodType<T>,
   input: unknown,
   fallbackMessage = 'Invalid input'
 ): { data: T } | { error: string } {

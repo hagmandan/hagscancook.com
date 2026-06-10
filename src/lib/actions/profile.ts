@@ -5,10 +5,13 @@
  */
 
 import { revalidatePath } from 'next/cache'
+import { z } from 'zod'
 import { db } from '@/lib/db'
 import { requireSession } from '@/lib/auth'
-import { parseOrError } from '@/lib/schemas/validation'
-import { UpdateProfileSchema } from '@/lib/schemas/profile'
+
+const UpdateProfileSchema = z.object({
+  displayName: z.string().min(1, 'Display name is required').max(80),
+})
 
 /**
  * Updates the current user's display name.
@@ -20,14 +23,16 @@ export async function updateProfile(
 ): Promise<{ ok: true } | { error: string }> {
   const session = await requireSession()
 
-  const result = parseOrError(UpdateProfileSchema, {
+  const parsed = UpdateProfileSchema.safeParse({
     displayName: formData.get('displayName'),
   })
-  if ('error' in result) return result
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? 'Invalid input' }
+  }
 
   await db.user.update({
     where: { id: session.userId },
-    data: { displayName: result.data.displayName },
+    data: { displayName: parsed.data.displayName },
   })
 
   revalidatePath('/profile')

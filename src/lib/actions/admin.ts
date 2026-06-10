@@ -7,13 +7,11 @@
  */
 
 import { revalidatePath } from 'next/cache'
+import { z } from 'zod'
 import { db } from '@/lib/db'
 import { requireAdmin } from '@/lib/auth'
 import { toSlug } from '@/lib/utils/slugify'
 import { captureException } from '@/lib/monitoring/errors'
-import { parseOrError } from '@/lib/schemas/validation'
-import { TagSchema, IngredientTypeSchema, IngredientSchema } from '@/lib/schemas/admin'
-import { revalidateRecipeFeeds } from '@/lib/utils/revalidation'
 import type { Role } from '@prisma/client'
 
 // ---------------------------------------------------------------------------
@@ -38,7 +36,9 @@ export async function unpublishRecipe(
     where: { id: recipeId },
     data: { status: 'draft' },
   })
-  revalidateRecipeFeeds(recipe.slug)
+  revalidatePath('/')
+  revalidatePath('/recipes')
+  revalidatePath(`/recipes/${recipe.slug}`)
   revalidatePath('/admin')
   return { ok: true }
 }
@@ -60,7 +60,9 @@ export async function adminDeleteRecipe(
     where: { id: recipeId },
     data: { deletedAt: new Date() },
   })
-  revalidateRecipeFeeds(recipe.slug)
+  revalidatePath(`/recipes/${recipe.slug}`)
+  revalidatePath('/')
+  revalidatePath('/recipes')
   revalidatePath('/admin')
   return { ok: true }
 }
@@ -147,17 +149,21 @@ export async function setUserRole(
 // Tag management
 // ---------------------------------------------------------------------------
 
+const TagSchema = z.object({
+  name: z.string().min(1).max(60),
+})
+
 /** Creates a new tag. Slug is auto-generated from name. */
 export async function createTag(
   formData: FormData
 ): Promise<{ ok: true } | { error: string }> {
   await requireAdmin()
-  const result = parseOrError(TagSchema, { name: formData.get('name') }, 'Invalid')
-  if ('error' in result) return result
+  const parsed = TagSchema.safeParse({ name: formData.get('name') })
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Invalid' }
 
-  const slug = toSlug(result.data.name)
+  const slug = toSlug(parsed.data.name)
   try {
-    await db.tag.create({ data: { name: result.data.name, slug } })
+    await db.tag.create({ data: { name: parsed.data.name, slug } })
   } catch (err) {
     captureException(err, { feature: 'admin', operation: 'create-tag', runtime: 'server' })
     return { error: 'A tag with that name already exists' }
@@ -180,17 +186,21 @@ export async function deleteTag(
 // Ingredient type management
 // ---------------------------------------------------------------------------
 
+const IngredientTypeSchema = z.object({
+  name: z.string().min(1).max(60),
+})
+
 /** Creates a new ingredient type. */
 export async function createIngredientType(
   formData: FormData
 ): Promise<{ ok: true } | { error: string }> {
   await requireAdmin()
-  const result = parseOrError(IngredientTypeSchema, { name: formData.get('name') }, 'Invalid')
-  if ('error' in result) return result
+  const parsed = IngredientTypeSchema.safeParse({ name: formData.get('name') })
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Invalid' }
 
-  const slug = toSlug(result.data.name)
+  const slug = toSlug(parsed.data.name)
   try {
-    await db.ingredientType.create({ data: { name: result.data.name, slug } })
+    await db.ingredientType.create({ data: { name: parsed.data.name, slug } })
   } catch (err) {
     captureException(err, { feature: 'admin', operation: 'create-ingredient-type', runtime: 'server' })
     return { error: 'An ingredient type with that name already exists' }
@@ -203,22 +213,27 @@ export async function createIngredientType(
 // Ingredient management
 // ---------------------------------------------------------------------------
 
+const IngredientSchema = z.object({
+  name: z.string().min(1).max(120),
+  typeId: z.string().uuid(),
+})
+
 /** Creates a new canonical ingredient. */
 export async function createIngredient(
   formData: FormData
 ): Promise<{ ok: true } | { error: string }> {
   await requireAdmin()
-  const result = parseOrError(IngredientSchema, {
+  const parsed = IngredientSchema.safeParse({
     name: formData.get('name'),
     typeId: formData.get('typeId'),
-  }, 'Invalid')
-  if ('error' in result) return result
+  })
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Invalid' }
 
   try {
     await db.ingredient.create({
       data: {
-        name: result.data.name.toLowerCase().trim(),
-        typeId: result.data.typeId,
+        name: parsed.data.name.toLowerCase().trim(),
+        typeId: parsed.data.typeId,
       },
     })
   } catch (err) {
