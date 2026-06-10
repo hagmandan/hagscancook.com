@@ -7,13 +7,49 @@
  */
 
 import { requireSession } from '@/lib/auth'
+import { db } from '@/lib/db'
 import { ProfileForm } from './ProfileForm'
+import { BadgeGrid, type BadgeCounts } from '@/components/profile/BadgeGrid'
 import styles from './profile.module.css'
 
 export const metadata = { title: 'Profile' }
 
 export default async function ProfilePage() {
   const session = await requireSession()
+  const userId = session.userId
+
+  const recipeIds = await db.recipe
+    .findMany({ where: { authorId: userId, deletedAt: null }, select: { id: true } })
+    .then((rows) => rows.map((r) => r.id))
+
+  const hitMakerGroups =
+    recipeIds.length > 0
+      ? await db.favorite.groupBy({
+          by: ['recipeId'],
+          where: { recipeId: { in: recipeIds } },
+          _count: { _all: true },
+        })
+      : []
+
+  const [badges, pantryCt, recipeCt, communityFavCt] = await Promise.all([
+    db.userBadge.findMany({
+      where: { userId },
+      select: { badgeType: true, tier: true, earnedAt: true },
+      orderBy: { earnedAt: 'asc' },
+    }),
+    db.pantryItem.count({ where: { userId } }),
+    db.recipe.count({ where: { authorId: userId, status: 'published', deletedAt: null } }),
+    db.favorite.count({ where: { recipe: { authorId: userId, deletedAt: null } } }),
+  ])
+
+  const hitMakerCt = hitMakerGroups.reduce((acc, g) => Math.max(acc, g._count._all), 0)
+
+  const counts: BadgeCounts = {
+    pantry: pantryCt,
+    recipes: recipeCt,
+    communityFav: communityFavCt,
+    hitMaker: hitMakerCt,
+  }
 
   return (
     <div className={styles.page}>
@@ -46,6 +82,8 @@ export default async function ProfilePage() {
 
         <ProfileForm initialDisplayName={session.displayName} />
       </div>
+
+      <BadgeGrid badges={badges} counts={counts} />
     </div>
   )
 }
