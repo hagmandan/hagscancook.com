@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useTransition } from 'react'
 import { deleteRecipe } from '@/lib/actions/recipes'
 import { useToast } from '@/lib/toast'
 import { StatusToggle } from '@/components/recipe/StatusToggle'
@@ -15,18 +15,21 @@ interface RecipeRowActionsProps {
 }
 
 export function RecipeRowActions({ recipeId, recipeSlug, status }: RecipeRowActionsProps) {
-  const [deleting, setDeleting] = useState(false)
+  const [isPending, startTransition] = useTransition()
   const toast = useToast()
 
-  async function handleDelete() {
-    setDeleting(true)
-    const result = await deleteRecipe(recipeId)
-    // If deleteRecipe succeeded it called redirect() — component unmounts
-    // and we never reach here. If we do reach here, there was an error.
-    if ('error' in result) {
-      toast.error('Error', 'Could not delete recipe')
-      setDeleting(false)
-    }
+  function handleDelete() {
+    return new Promise<void>((resolve) => {
+      startTransition(async () => {
+        const result = await deleteRecipe(recipeId)
+        // If deleteRecipe succeeded it called redirect() — component unmounts
+        // and we never reach here. If we do reach here, there was an error.
+        if ('error' in result) {
+          toast.error('Error', 'Could not delete recipe')
+        }
+        resolve()
+      })
+    })
   }
 
   return (
@@ -44,7 +47,7 @@ export function RecipeRowActions({ recipeId, recipeSlug, status }: RecipeRowActi
         confirmLabel="Yes, delete"
         cancelLabel="Cancel"
         onConfirm={handleDelete}
-        isPending={deleting}
+        isPending={isPending}
         pendingLabel="Deleting…"
         danger
       />
