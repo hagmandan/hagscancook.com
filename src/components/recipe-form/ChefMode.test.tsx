@@ -51,7 +51,7 @@ vi.mock('@/lib/toast', () => ({
 }))
 
 vi.mock('@/lib/hooks/useTitleAvailability', () => ({
-  useTitleAvailability: vi.fn(() => ({ taken: false })),
+  useTitleAvailability: vi.fn(() => ({ taken: false, checking: false })),
 }))
 
 vi.mock('./useCoverUpload', () => ({
