@@ -4,6 +4,11 @@ import userEvent from '@testing-library/user-event'
 import { useForm } from 'react-hook-form'
 import { IngredientsField } from './IngredientsField'
 import type { RecipeFormValues } from '@/lib/schemas/recipe'
+// @ts-expect-error — test helpers added to the manual mock
+import { simulateDragEnd } from '@dnd-kit/core'
+// @ts-expect-error — test helpers added to the manual mock
+import { getSortableItems } from '@dnd-kit/sortable'
+import type { DragEndEvent } from '@dnd-kit/core'
 
 vi.mock('@dnd-kit/core')
 vi.mock('@dnd-kit/sortable')
@@ -107,6 +112,38 @@ describe('IngredientsField', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Remove ingredient 1' }))
 
     expect(screen.queryByDisplayValue('flour')).not.toBeInTheDocument()
+  })
+
+  it('reorders ingredients when drag ends on a different target', () => {
+    const ingA = { ...defaultIngredient, ingredientName: 'flour' }
+    const ingB = { ...defaultIngredient, ingredientName: 'sugar' }
+    render(<TestIngredientsField defaultIngredients={[ingA, ingB]} />)
+
+    const [firstId, secondId] = getSortableItems()
+
+    act(() => {
+      simulateDragEnd({ active: { id: firstId }, over: { id: secondId } } as DragEndEvent)
+    })
+
+    const nameInputs = screen.getAllByTestId(/ingredient-\d+-name/)
+    expect(nameInputs[0]).toHaveValue('sugar')
+    expect(nameInputs[1]).toHaveValue('flour')
+  })
+
+  it('does not reorder when ingredient is dropped on itself', () => {
+    const ingA = { ...defaultIngredient, ingredientName: 'flour' }
+    const ingB = { ...defaultIngredient, ingredientName: 'sugar' }
+    render(<TestIngredientsField defaultIngredients={[ingA, ingB]} />)
+
+    const [firstId] = getSortableItems()
+
+    act(() => {
+      simulateDragEnd({ active: { id: firstId }, over: { id: firstId } } as DragEndEvent)
+    })
+
+    const nameInputs = screen.getAllByTestId(/ingredient-\d+-name/)
+    expect(nameInputs[0]).toHaveValue('flour')
+    expect(nameInputs[1]).toHaveValue('sugar')
   })
 
   it('shows row validation errors', async () => {

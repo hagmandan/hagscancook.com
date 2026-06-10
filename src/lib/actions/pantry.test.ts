@@ -34,7 +34,7 @@ import { requireSession } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { resolveIngredient } from '@/lib/ingredients'
 import { captureException } from '@/lib/monitoring/errors'
-import { addPantryItem, addPantryItems, removePantryItem, updatePantryItem } from './pantry'
+import { addPantryItem, addPantryItems, removePantryItem, togglePantryItemOutOfStock, updatePantryItem } from './pantry'
 
 const mockRequireSession = vi.mocked(requireSession)
 const mockResolveIngredient = vi.mocked(resolveIngredient)
@@ -217,6 +217,70 @@ describe('updatePantryItem', () => {
     })
     expect(mockRevalidatePath).toHaveBeenCalledWith('/pantry')
   })
+
+  it('captures failures and returns a user-facing error', async () => {
+    const error = new Error('update failed')
+    mockUpdate.mockRejectedValue(error)
+
+    const result = await updatePantryItem('pantry-1', { amount: '3' })
+
+    expect(result).toEqual({ error: 'Failed to update item. Please try again.' })
+    expect(mockCaptureException).toHaveBeenCalledWith(error, {
+      feature: 'pantry',
+      operation: 'update',
+      runtime: 'server',
+    })
+  })
+})
+
+describe('togglePantryItemOutOfStock', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockRequireSession.mockResolvedValue({ userId: 'user-1', role: 'user' })
+    mockFindUnique.mockResolvedValue({ userId: 'user-1', outOfStock: false })
+    mockUpdate.mockResolvedValue(pantryRow())
+  })
+
+  it('returns not found when the item does not exist', async () => {
+    mockFindUnique.mockResolvedValue(null)
+
+    const result = await togglePantryItemOutOfStock('pantry-1')
+
+    expect(result).toEqual({ error: 'Pantry item not found' })
+    expect(mockUpdate).not.toHaveBeenCalled()
+  })
+
+  it("blocks toggling another user's item", async () => {
+    mockFindUnique.mockResolvedValue({ userId: 'other-user', outOfStock: false })
+
+    const result = await togglePantryItemOutOfStock('pantry-1')
+
+    expect(result).toEqual({ error: 'Not authorised to edit this item' })
+    expect(mockUpdate).not.toHaveBeenCalled()
+  })
+
+  it('flips outOfStock to true for an owned item', async () => {
+    await togglePantryItemOutOfStock('pantry-1')
+
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { outOfStock: true } }),
+    )
+    expect(mockRevalidatePath).toHaveBeenCalledWith('/pantry')
+  })
+
+  it('captures failures and returns a user-facing error', async () => {
+    const error = new Error('toggle failed')
+    mockUpdate.mockRejectedValue(error)
+
+    const result = await togglePantryItemOutOfStock('pantry-1')
+
+    expect(result).toEqual({ error: 'Failed to update item. Please try again.' })
+    expect(mockCaptureException).toHaveBeenCalledWith(error, {
+      feature: 'pantry',
+      operation: 'toggle-oos',
+      runtime: 'server',
+    })
+  })
 })
 
 describe('removePantryItem', () => {
@@ -250,5 +314,19 @@ describe('removePantryItem', () => {
 
     expect(mockDelete).toHaveBeenCalledWith({ where: { id: 'pantry-1' } })
     expect(mockRevalidatePath).toHaveBeenCalledWith('/pantry')
+  })
+
+  it('captures failures and returns a user-facing error', async () => {
+    const error = new Error('delete failed')
+    mockDelete.mockRejectedValue(error)
+
+    const result = await removePantryItem('pantry-1')
+
+    expect(result).toEqual({ error: 'Failed to remove item. Please try again.' })
+    expect(mockCaptureException).toHaveBeenCalledWith(error, {
+      feature: 'pantry',
+      operation: 'remove',
+      runtime: 'server',
+    })
   })
 })

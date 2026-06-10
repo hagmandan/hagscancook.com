@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { CreatableMultiSelect, MultiSelect } from './MultiSelect'
+import { CreatableMultiSelect, MultiSelect, classNamesConfig } from './MultiSelect'
 
 vi.mock('react-select')
 vi.mock('react-select/creatable')
@@ -102,5 +102,37 @@ describe('CreatableMultiSelect', () => {
     await userEvent.keyboard('{Enter}')
 
     expect(onChange).toHaveBeenCalledWith(['dinner', 'Brunch'])
+  })
+})
+
+describe('classNamesConfig', () => {
+  it('control includes focused class only when isFocused is true', () => {
+    expect(classNamesConfig.control!({ isFocused: true } as never)).toContain('controlFocused')
+    expect(classNamesConfig.control!({ isFocused: false } as never)).not.toContain('controlFocused')
+  })
+
+  it('option returns selected class when isSelected', () => {
+    expect(classNamesConfig.option!({ isSelected: true, isFocused: false } as never)).toContain('optionSelected')
+  })
+
+  it('option returns focused class when isFocused and not selected', () => {
+    expect(classNamesConfig.option!({ isSelected: false, isFocused: true } as never)).toContain('optionFocused')
+  })
+
+  it('option returns base class when neither focused nor selected', () => {
+    const result = classNamesConfig.option!({ isSelected: false, isFocused: false } as never)
+    expect(result).not.toContain('optionSelected')
+    expect(result).not.toContain('optionFocused')
+  })
+
+  it('simple class accessors return a non-empty string', () => {
+    const noArgKeys = [
+      'valueContainer', 'multiValue', 'multiValueLabel', 'multiValueRemove',
+      'input', 'placeholder', 'indicatorsContainer', 'dropdownIndicator',
+      'clearIndicator', 'indicatorSeparator', 'menu', 'menuList', 'noOptionsMessage',
+    ] as const
+    for (const key of noArgKeys) {
+      expect(typeof classNamesConfig[key]!({} as never)).toBe('string')
+    }
   })
 })

@@ -31,7 +31,7 @@ function toSelected(values: string[], options: readonly Option[]): Option[] {
   return values.map((v) => options.find((o) => o.value === v) ?? { label: v, value: v })
 }
 
-const classNamesConfig: ClassNamesConfig<Option, true, GroupBase<Option>> = {
+export const classNamesConfig: ClassNamesConfig<Option, true, GroupBase<Option>> = {
   control: ({ isFocused }) =>
     `${styles.control}${isFocused ? ` ${styles.controlFocused}` : ''}`,
   valueContainer: () => styles.valueContainer,

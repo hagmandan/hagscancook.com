@@ -51,6 +51,7 @@ import { db } from '@/lib/db'
 import { resolveIngredient } from '@/lib/ingredients'
 import { generateUniqueSlug } from '@/lib/utils/slugify'
 import { revalidatePath } from 'next/cache'
+import { captureException } from '@/lib/monitoring/errors'
 import type { RecipeFormValues } from '@/lib/schemas/recipe'
 
 const mockCreate = vi.mocked(db.recipe.create)
@@ -298,6 +299,18 @@ describe('loadMoreRecipes', () => {
       }),
     )
   })
+
+  it('captures db failures and rethrows', async () => {
+    const error = new Error('db timeout')
+    mockFindMany.mockRejectedValue(error)
+
+    await expect(loadMoreRecipes('abc', {})).rejects.toThrow('db timeout')
+    expect(vi.mocked(captureException)).toHaveBeenCalledWith(error, {
+      feature: 'recipe-feed',
+      operation: 'load-more',
+      runtime: 'server',
+    })
+  })
 })
 
 describe('updateRecipe', () => {
@@ -442,6 +455,22 @@ describe('toggleRecipeStatus', () => {
     expect(mockRecipeUpdate).toHaveBeenCalledWith({
       where: { id: 'recipe-1' },
       data: { status: 'draft' },
+    })
+  })
+
+  it('captures db failures and returns a user-facing error', async () => {
+    mockFindUnique.mockResolvedValue({ authorId: 'user-1', slug: 'lemon-pasta', status: 'draft' })
+    const error = new Error('db timeout')
+    mockRecipeUpdate.mockRejectedValue(error)
+
+    const result = await toggleRecipeStatus('recipe-1')
+
+    expect(result).toEqual({ error: 'Failed to update recipe status. Please try again.' })
+    expect(vi.mocked(captureException)).toHaveBeenCalledWith(error, {
+      feature: 'recipe-status',
+      operation: 'toggle',
+      recipeId: 'recipe-1',
+      runtime: 'server',
     })
   })
 })

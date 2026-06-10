@@ -60,6 +60,14 @@ describe('MobileMenu', () => {
     expect(screen.queryByRole('link', { name: 'My Pantry' })).not.toBeInTheDocument()
   })
 
+  it('calls logout and closes drawer when Sign out is clicked', () => {
+    render(<MobileMenu />)
+    fireEvent.click(screen.getByRole('button', { name: /open menu/i }))
+    fireEvent.click(screen.getByRole('button', { name: /sign out/i }))
+    expect(mockLogout).toHaveBeenCalledTimes(1)
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
   it('closes drawer when backdrop is clicked', () => {
     render(<MobileMenu />)
     fireEvent.click(screen.getByRole('button', { name: /open menu/i }))
