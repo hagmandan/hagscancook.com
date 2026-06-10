@@ -12,6 +12,7 @@
  * rather than causing a server redirect.
  */
 
+import { cache } from 'react'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -29,7 +30,7 @@ interface RecipePageProps {
   params: Promise<{ slug: string }>
 }
 
-async function getRecipe(slug: string) {
+const getRecipe = cache(async (slug: string) => {
   return db.recipe.findFirst({
     where: { slug, deletedAt: null },
     include: {
@@ -42,7 +43,7 @@ async function getRecipe(slug: string) {
       tags: { include: { tag: true } },
     },
   })
-}
+})
 
 export async function generateMetadata({ params }: RecipePageProps) {
   const { slug } = await params
