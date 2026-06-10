@@ -86,6 +86,10 @@ describe('checkAndAwardBadges — PANTRY_PIONEER', () => {
       data: [{ userId: 'user-1', badgeType: 'PANTRY_PIONEER', tier: 'BRONZE' }],
       skipDuplicates: true,
     })
+    expect(mockBadgeFindMany).toHaveBeenCalledWith({
+      where: { userId: 'user-1', badgeType: 'PANTRY_PIONEER' },
+      select: { tier: true },
+    })
   })
 
   it('returns empty when all earned tiers are already stored', async () => {
@@ -137,6 +141,19 @@ describe('checkAndAwardBadges — HIT_MAKER', () => {
 
     expect(result).toEqual([])
     expect(mockFavGroupBy).not.toHaveBeenCalled()
+  })
+
+  it('returns empty when user has recipes but no favorites yet', async () => {
+    mockRecipeFindMany.mockResolvedValue([
+      { id: 'recipe-a' },
+    ] as Awaited<ReturnType<typeof db.recipe.findMany>>)
+    mockFavGroupBy.mockResolvedValue([])
+    mockBadgeFindMany.mockResolvedValue([])
+
+    const result = await checkAndAwardBadges('user-1', 'HIT_MAKER')
+
+    expect(result).toEqual([])
+    expect(mockBadgeCreateMany).not.toHaveBeenCalled()
   })
 
   it("returns max favorites across the user's recipes", async () => {

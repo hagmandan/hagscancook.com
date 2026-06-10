@@ -15,6 +15,8 @@ export const BADGE_THRESHOLDS: { tier: BadgeTier; min: number }[] = [
 async function getCount(userId: string, badgeType: BadgeType): Promise<number> {
   switch (badgeType) {
     case 'PANTRY_PIONEER':
+      // Count all items, including out-of-stock — the badge tracks items ever added,
+      // not current stock level.
       return db.pantryItem.count({ where: { userId } })
     case 'RECIPE_AUTHOR':
       return db.recipe.count({
@@ -26,7 +28,7 @@ async function getCount(userId: string, badgeType: BadgeType): Promise<number> {
       })
     case 'HIT_MAKER': {
       const recipeIds = await db.recipe
-        .findMany({ where: { authorId: userId, deletedAt: null }, select: { id: true } })
+        .findMany({ where: { authorId: userId, status: 'published', deletedAt: null }, select: { id: true } })
         .then((rows) => rows.map((r) => r.id))
       if (recipeIds.length === 0) return 0
       const groups = await db.favorite.groupBy({
@@ -34,7 +36,7 @@ async function getCount(userId: string, badgeType: BadgeType): Promise<number> {
         where: { recipeId: { in: recipeIds } },
         _count: { _all: true },
       })
-      return Math.max(0, ...groups.map((g) => g._count._all))
+      return groups.reduce((acc, g) => Math.max(acc, g._count._all), 0)
     }
   }
 }
