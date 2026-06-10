@@ -1,21 +1,8 @@
 'use client'
 
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from '@dnd-kit/core'
-import {
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable'
+import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { SortableList } from './SortableList'
 import { useFieldArray, useWatch, type UseFormReturn, type Control } from 'react-hook-form'
 import type { RecipeFormValues } from '@/lib/schemas/recipe'
 import { LIMITS } from '@/lib/schemas/recipe'
@@ -34,45 +21,21 @@ export function StepsField({ form }: StepsFieldProps) {
     name: 'steps',
   })
 
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  )
-
-  function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event
-    if (!over || active.id === over.id) return
-    const oldIndex = fields.findIndex((f) => f.id === active.id)
-    const newIndex = fields.findIndex((f) => f.id === over.id)
-    if (oldIndex !== -1 && newIndex !== -1) move(oldIndex, newIndex)
-  }
-
   return (
     <div className={styles.root}>
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-      >
-        <SortableContext
-          items={fields.map((f) => f.id)}
-          strategy={verticalListSortingStrategy}
-        >
-          {fields.map((field, index) => (
-            <SortableStep
-              key={field.id}
-              id={field.id}
-              index={index}
-              control={control}
-              register={register}
-              error={errors.steps?.[index]?.content?.message}
-              onRemove={() => remove(index)}
-            />
-          ))}
-        </SortableContext>
-      </DndContext>
+      <SortableList fields={fields} onMove={move}>
+        {fields.map((field, index) => (
+          <SortableStep
+            key={field.id}
+            id={field.id}
+            index={index}
+            control={control}
+            register={register}
+            error={errors.steps?.[index]?.content?.message}
+            onRemove={() => remove(index)}
+          />
+        ))}
+      </SortableList>
 
       <button
         type="button"
