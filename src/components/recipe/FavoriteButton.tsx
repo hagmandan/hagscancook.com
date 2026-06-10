@@ -10,6 +10,7 @@
 import { useState, useTransition } from 'react'
 import { toggleFavorite } from '@/lib/actions/favorites'
 import { useToast } from '@/lib/toast'
+import { tierLabel, badgeLabel, badgeSubtitle } from '@/lib/badges'
 import styles from './FavoriteButton.module.css'
 
 interface FavoriteButtonProps {
@@ -35,9 +36,12 @@ export function FavoriteButton({
       if ('error' in result) {
         setFavorited((prev) => !prev)
         toast.error('Error', 'Could not update favorite')
-      } else {
-        setFavorited(result.favorited)
+        return
       }
+      setFavorited(result.favorited)
+      result.newBadges.forEach((b) =>
+        toast.success(`${tierLabel(b.tier)} unlocked — ${badgeLabel(b.badgeType)}`, badgeSubtitle(b))
+      )
     })
   }
 
