@@ -30,8 +30,8 @@ export function setupRecipeFormMocks(mode: 'chef' | 'guided' = 'chef') {
   vi.mocked(usePathname).mockReturnValue('/recipes/new')
   vi.mocked(useToast).mockReturnValue({ error: mockToastError, success: vi.fn() } as never)
   vi.mocked(useTitleAvailability).mockReturnValue({ taken: false })
-  vi.mocked(createRecipe).mockResolvedValue({ slug: 'test-slug' })
-  vi.mocked(updateRecipe).mockResolvedValue({ slug: 'test-slug' })
+  vi.mocked(createRecipe).mockResolvedValue({ slug: 'test-slug', newBadges: [] })
+  vi.mocked(updateRecipe).mockResolvedValue({ slug: 'test-slug', newBadges: [] })
 }
 
 export function renderRecipeForm({

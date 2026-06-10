@@ -37,6 +37,16 @@ vi.mock('@/lib/actions/recipes', () => ({
   updateRecipe: vi.fn(),
 }))
 
+// ── Badge helpers mock (badges.ts imports db; mock to avoid DATABASE_URL requirement) ──
+vi.mock('@/lib/badges', () => ({
+  checkAndAwardBadges: vi.fn().mockResolvedValue([]),
+  tierLabel: vi.fn((tier: string) => tier),
+  badgeLabel: vi.fn((type: string) => type),
+  badgeSubtitle: vi.fn(() => ''),
+  nextThreshold: vi.fn(() => null),
+  BADGE_THRESHOLDS: [],
+}))
+
 // ── Hook mocks ────────────────────────────────────────────────────────────────
 vi.mock('@/lib/toast', () => ({
   useToast: vi.fn(),
@@ -172,7 +182,7 @@ describe('RecipeForm', () => {
 
   describe('submit state', () => {
     it('disables the Save button while a submission is in flight', async () => {
-      let resolveAction!: (v: { slug: string }) => void
+      let resolveAction!: (v: { slug: string; newBadges: [] }) => void
       vi.mocked(createRecipe).mockReturnValue(
         new Promise((res) => { resolveAction = res })
       )
@@ -185,7 +195,7 @@ describe('RecipeForm', () => {
 
       expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
 
-      await act(async () => { resolveAction({ slug: 'test-slug' }) })
+      await act(async () => { resolveAction({ slug: 'test-slug', newBadges: [] }) })
       await waitFor(() => expect(mockPush).toHaveBeenCalled())
     })
   })

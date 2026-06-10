@@ -35,6 +35,16 @@ vi.mock('@/lib/actions/recipes', () => ({
   updateRecipe: vi.fn(),
 }))
 
+// ── Badge helpers mock (badges.ts imports db; mock to avoid DATABASE_URL requirement) ──
+vi.mock('@/lib/badges', () => ({
+  checkAndAwardBadges: vi.fn().mockResolvedValue([]),
+  tierLabel: vi.fn((tier: string) => tier),
+  badgeLabel: vi.fn((type: string) => type),
+  badgeSubtitle: vi.fn(() => ''),
+  nextThreshold: vi.fn(() => null),
+  BADGE_THRESHOLDS: [],
+}))
+
 // ── Hook mocks ────────────────────────────────────────────────────────────────
 vi.mock('@/lib/toast', () => ({
   useToast: vi.fn(),
