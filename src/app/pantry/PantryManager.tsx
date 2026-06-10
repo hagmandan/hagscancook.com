@@ -15,6 +15,8 @@ import {
   type PantryItemView,
 } from '@/lib/actions/pantry'
 import { PANTRY_LIMITS } from '@/lib/schemas/pantry'
+import { useToast } from '@/lib/toast'
+import { tierLabel, badgeLabel, badgeSubtitle } from '@/lib/badges'
 import { PantryCategoryBoard } from './PantryCategoryBoard'
 import { PantryRow } from './PantryRow'
 import styles from './pantry.module.css'
@@ -199,6 +201,7 @@ function QuickAdd({
   const [typeId, setTypeId] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const toast = useToast()
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -217,6 +220,9 @@ function QuickAdd({
         setError(result.error)
         return
       }
+      result.newBadges.forEach((b) =>
+        toast.success(`${tierLabel(b.tier)} unlocked — ${badgeLabel(b.badgeType)}`, badgeSubtitle(b))
+      )
       onAdded(result.item)
       setName('')
       setAmount('')

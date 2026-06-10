@@ -3,6 +3,8 @@
 import { useState, useTransition } from 'react'
 import { addPantryItem, type PantryItemView } from '@/lib/actions/pantry'
 import { PANTRY_LIMITS } from '@/lib/schemas/pantry'
+import { useToast } from '@/lib/toast'
+import { tierLabel, badgeLabel, badgeSubtitle } from '@/lib/badges'
 import styles from './pantry.module.css'
 
 interface PantrySectionAddProps {
@@ -15,6 +17,7 @@ export function PantrySectionAdd({ sectionId, typeId, onAdded }: PantrySectionAd
   const [name, setName] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const toast = useToast()
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -28,6 +31,9 @@ export function PantrySectionAdd({ sectionId, typeId, onAdded }: PantrySectionAd
         setError(result.error)
         return
       }
+      result.newBadges.forEach((b) =>
+        toast.success(`${tierLabel(b.tier)} unlocked — ${badgeLabel(b.badgeType)}`, badgeSubtitle(b))
+      )
       onAdded(result.item)
       setName('')
     })

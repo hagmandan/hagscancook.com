@@ -19,6 +19,7 @@ import { resolveIngredient } from '@/lib/ingredients'
 import { AddPantryItemSchema, UpdatePantryItemSchema } from '@/lib/schemas/pantry'
 import type { AddPantryItemInput, UpdatePantryItemInput } from '@/lib/schemas/pantry'
 import { captureException } from '@/lib/monitoring/errors'
+import { checkAndAwardBadges, type NewBadge } from '@/lib/badges'
 
 /** Shape returned to the client for optimistic rendering. */
 export interface PantryItemView {
@@ -74,7 +75,7 @@ function toView(row: ItemRow): PantryItemView {
  */
 export async function addPantryItem(
   input: AddPantryItemInput
-): Promise<{ item: PantryItemView } | { error: string }> {
+): Promise<{ item: PantryItemView; newBadges: NewBadge[] } | { error: string }> {
   const session = await requireSession()
 
   const parsed = AddPantryItemSchema.safeParse(input)
@@ -103,8 +104,9 @@ export async function addPantryItem(
       select: ITEM_SELECT,
     })
 
+    const newBadges = await checkAndAwardBadges(session.userId, 'PANTRY_PIONEER')
     revalidatePath('/pantry')
-    return { item: toView(row) }
+    return { item: toView(row), newBadges }
   } catch (err) {
     captureException(err, {
       feature: 'pantry',
@@ -121,7 +123,7 @@ export async function addPantryItem(
  */
 export async function addPantryItems(
   inputs: AddPantryItemInput[]
-): Promise<{ items: PantryItemView[] } | { error: string }> {
+): Promise<{ items: PantryItemView[]; newBadges: NewBadge[] } | { error: string }> {
   const session = await requireSession()
 
   const valid = inputs
@@ -143,8 +145,9 @@ export async function addPantryItems(
         })
       })
     )
+    const newBadges = await checkAndAwardBadges(session.userId, 'PANTRY_PIONEER')
     revalidatePath('/pantry')
-    return { items: rows.map(toView) }
+    return { items: rows.map(toView), newBadges }
   } catch (err) {
     captureException(err, { feature: 'pantry', operation: 'bulk-add', runtime: 'server' })
     return { error: 'Failed to add items. Please try again.' }

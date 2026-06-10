@@ -5,6 +5,7 @@ import type { PantryItemView } from '@/lib/actions/pantry'
 import { addPantryItems } from '@/lib/actions/pantry'
 import { PANTRY_SECTIONS, sectionIdForTypeSlug } from '@/lib/pantry/common-ingredients'
 import { useToast } from '@/lib/toast'
+import { tierLabel, badgeLabel, badgeSubtitle } from '@/lib/badges'
 import { PantryIngredientPill } from './PantryIngredientPill'
 import { PantryRow } from './PantryRow'
 import { PantrySectionAdd } from './PantrySectionAdd'
@@ -183,6 +184,9 @@ function SectionCard({
     startTransition(async () => {
       const result = await addPantryItems(buildInputs(selected))
       if ('error' in result) { toast.error('Error', result.error); return }
+      result.newBadges.forEach((b) =>
+        toast.success(`${tierLabel(b.tier)} unlocked — ${badgeLabel(b.badgeType)}`, badgeSubtitle(b))
+      )
       result.items.forEach(onUpdated)
       setSelected(new Set())
       dialogRef.current?.close()
