@@ -120,8 +120,7 @@ function SortableIngredientRow({
   const rowErrors = errors.ingredients?.[index]
 
   return (
-    <>
-      <tr ref={setNodeRef} style={style} className={styles.row}>
+    <tr ref={setNodeRef} style={style} className={styles.row}>
         <td>
           <button
             type="button"
@@ -210,7 +209,6 @@ function SortableIngredientRow({
           </button>
         </td>
       </tr>
-    </>
   )
 }
 

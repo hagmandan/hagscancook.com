@@ -1,16 +1,5 @@
 'use client'
 
-/**
- * Root recipe form component.
- *
- * Owns the single `useForm()` instance shared by ChefMode and GuidedMode.
- * Mode is controlled by the `mode` URL query param — switching modes is a
- * layout change only, never a form reset (shouldUnregister defaults to false
- * in React Hook Form v7, so unmounted fields keep their values).
- *
- * Used by both /recipes/new (no initialValues) and /recipes/[slug]/edit
- * (initialValues populated from the DB).
- */
 
 import { useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
