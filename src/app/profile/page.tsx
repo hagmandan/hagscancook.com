@@ -19,7 +19,7 @@ export default async function ProfilePage() {
   const userId = session.userId
 
   const recipeIds = await db.recipe
-    .findMany({ where: { authorId: userId, deletedAt: null }, select: { id: true } })
+    .findMany({ where: { authorId: userId, status: 'published', deletedAt: null }, select: { id: true } })
     .then((rows) => rows.map((r) => r.id))
 
   const hitMakerGroups =
