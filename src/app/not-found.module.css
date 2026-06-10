@@ -1,0 +1,114 @@
+.page {
+  max-width: var(--layout-max);
+  margin: 0 auto;
+  padding: 0 var(--layout-px);
+}
+
+.shell {
+  min-height: min(42rem, calc(100vh - 12rem));
+  display: grid;
+  place-items: center;
+  padding: 5rem 0;
+}
+
+.card {
+  width: min(100%, 42rem);
+  text-align: center;
+  padding: clamp(2rem, 6vw, 4rem);
+  border: 1px solid var(--color-border);
+  border-radius: 1.25rem;
+  background:
+    radial-gradient(circle at top left, var(--color-brand-tint), transparent 42%),
+    var(--color-surface);
+  box-shadow: 0 1.5rem 4rem rgba(42, 26, 22, 0.08);
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 4.5rem;
+  min-height: 4.5rem;
+  margin-bottom: 1.25rem;
+  border-radius: 999px;
+  background-color: var(--color-brand);
+  color: var(--color-brand-text);
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.title {
+  margin: 0;
+  color: var(--color-text);
+  font-size: clamp(2.25rem, 8vw, 4.5rem);
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 0.95;
+}
+
+.subtitle {
+  max-width: 31rem;
+  margin: 1.25rem auto 0;
+  color: var(--color-text-3);
+  font-size: 1.125rem;
+  line-height: 1.6;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+
+.primary,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.625rem 1.5rem;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.primary {
+  background-color: var(--color-brand);
+  color: var(--color-brand-text);
+}
+
+.primary:hover {
+  background-color: var(--color-brand-hover);
+}
+
+.secondary {
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  color: var(--color-text-2);
+}
+
+.secondary:hover {
+  border-color: var(--color-text-4);
+  background-color: var(--color-surface-raised);
+  color: var(--color-text);
+}
+
+@media (max-width: 639px) {
+  .shell {
+    min-height: calc(100vh - 9rem);
+    padding: 3rem 0;
+  }
+
+  .card {
+    border-radius: 1rem;
+  }
+}

@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
 import { act, render, screen } from '@testing-library/react'
+// @ts-expect-error — test helpers added to the manual mock
+import { simulateDragEnd } from '@dnd-kit/core'
+// @ts-expect-error — test helpers added to the manual mock
+import { getSortableItems } from '@dnd-kit/sortable'
+import type { DragEndEvent } from '@dnd-kit/core'
 import userEvent from '@testing-library/user-event'
 import { useForm } from 'react-hook-form'
 import { StepsField } from './StepsField'
@@ -76,5 +81,33 @@ describe('StepsField', () => {
     })
 
     expect(screen.getByText('Step content is required')).toBeInTheDocument()
+  })
+
+  it('reorders steps when drag ends on a different target', () => {
+    render(<TestStepsField defaultSteps={[{ content: 'Step A' }, { content: 'Step B' }]} />)
+
+    const [firstId, secondId] = getSortableItems()
+
+    act(() => {
+      simulateDragEnd({ active: { id: firstId }, over: { id: secondId } } as DragEndEvent)
+    })
+
+    const textareas = screen.getAllByRole('textbox')
+    expect(textareas[0]).toHaveValue('Step B')
+    expect(textareas[1]).toHaveValue('Step A')
+  })
+
+  it('does not reorder when dropped on the same step', () => {
+    render(<TestStepsField defaultSteps={[{ content: 'Step A' }, { content: 'Step B' }]} />)
+
+    const [firstId] = getSortableItems()
+
+    act(() => {
+      simulateDragEnd({ active: { id: firstId }, over: { id: firstId } } as DragEndEvent)
+    })
+
+    const textareas = screen.getAllByRole('textbox')
+    expect(textareas[0]).toHaveValue('Step A')
+    expect(textareas[1]).toHaveValue('Step B')
   })
 })
