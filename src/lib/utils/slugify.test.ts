@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('@/lib/db', () => ({
   db: {
     recipe: {
-      findUnique: vi.fn(),
+      findMany: vi.fn(),
     },
   },
 }))
@@ -12,7 +12,7 @@ vi.mock('@/lib/db', () => ({
 import { db } from '@/lib/db'
 import { generateUniqueSlug, toSlug } from './slugify'
 
-const mockFindUnique = vi.mocked(db.recipe.findUnique)
+const mockFindMany = vi.mocked(db.recipe.findMany)
 
 describe('toSlug', () => {
   it('lowercases and collapses spaces, underscores, and hyphens', () => {
@@ -38,57 +38,57 @@ describe('toSlug', () => {
 
 describe('generateUniqueSlug', () => {
   beforeEach(() => {
-    mockFindUnique.mockReset()
+    mockFindMany.mockReset()
   })
 
   it('returns the base slug when available', async () => {
-    mockFindUnique.mockResolvedValue(null)
+    mockFindMany.mockResolvedValue([])
 
     await expect(generateUniqueSlug('Lemon Pasta')).resolves.toBe('lemon-pasta')
 
-    expect(mockFindUnique).toHaveBeenCalledWith({
-      where: { slug: 'lemon-pasta' },
-      select: { id: true },
+    expect(mockFindMany).toHaveBeenCalledWith({
+      where: { slug: { startsWith: 'lemon-pasta' }, deletedAt: null },
+      select: { id: true, slug: true },
     })
   })
 
   it('appends the first available numeric suffix after collisions', async () => {
-    mockFindUnique
-      .mockResolvedValueOnce({ id: 'recipe-1' })
-      .mockResolvedValueOnce({ id: 'recipe-2' })
-      .mockResolvedValueOnce(null)
+    mockFindMany.mockResolvedValue([
+      { id: 'recipe-1', slug: 'lemon-pasta' },
+      { id: 'recipe-2', slug: 'lemon-pasta-2' },
+    ] as Awaited<ReturnType<typeof db.recipe.findMany>>)
 
     await expect(generateUniqueSlug('Lemon Pasta')).resolves.toBe('lemon-pasta-3')
 
-    expect(mockFindUnique).toHaveBeenNthCalledWith(2, {
-      where: { slug: 'lemon-pasta-2' },
-      select: { id: true },
-    })
-    expect(mockFindUnique).toHaveBeenNthCalledWith(3, {
-      where: { slug: 'lemon-pasta-3' },
-      select: { id: true },
-    })
+    expect(mockFindMany).toHaveBeenCalledTimes(1)
   })
 
   it('treats the excluded recipe id as available', async () => {
-    mockFindUnique.mockResolvedValue({ id: 'current-recipe' })
+    mockFindMany.mockResolvedValue([
+      { id: 'current-recipe', slug: 'lemon-pasta' },
+    ] as Awaited<ReturnType<typeof db.recipe.findMany>>)
 
     await expect(generateUniqueSlug('Lemon Pasta', 'current-recipe')).resolves.toBe('lemon-pasta')
   })
 
   it('uses a recipe fallback when the title has no slug-safe characters', async () => {
-    mockFindUnique.mockResolvedValue(null)
+    mockFindMany.mockResolvedValue([])
 
     await expect(generateUniqueSlug('!!!')).resolves.toBe('recipe')
   })
 
   it('uses a timestamp fallback when numeric suffixes are exhausted', async () => {
     const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(1234567890)
-    mockFindUnique.mockResolvedValue({ id: 'existing-recipe' })
+    // Fill taken set with base + all 2..999 suffixes
+    const rows = [{ id: 'r0', slug: 'lemon-pasta' }]
+    for (let i = 2; i < 1000; i++) {
+      rows.push({ id: `r${i}`, slug: `lemon-pasta-${i}` })
+    }
+    mockFindMany.mockResolvedValue(rows as Awaited<ReturnType<typeof db.recipe.findMany>>)
 
     await expect(generateUniqueSlug('Lemon Pasta')).resolves.toBe('lemon-pasta-1234567890')
 
-    expect(mockFindUnique).toHaveBeenCalledTimes(999)
+    expect(mockFindMany).toHaveBeenCalledTimes(1)
     nowSpy.mockRestore()
   })
 })

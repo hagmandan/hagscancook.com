@@ -32,23 +32,26 @@ export async function generateUniqueSlug(
 ): Promise<string> {
   const base = toSlug(title) || 'recipe'
 
-  const isAvailable = async (candidate: string) => {
-    const existing = await db.recipe.findUnique({
-      where: { slug: candidate },
-      select: { id: true },
-    })
-    if (!existing) return true
-    if (excludeId && existing.id === excludeId) return true
-    return false
-  }
+  // Fetch all existing slugs with this prefix in one query.
+  // May include false positives (e.g. "pasta-bake" when base is "pasta"),
+  // but those just sit in the Set unused — only exact candidates are checked.
+  const rows = await db.recipe.findMany({
+    where: { slug: { startsWith: base }, deletedAt: null },
+    select: { id: true, slug: true },
+  })
 
-  if (await isAvailable(base)) return base
+  const taken = new Set(
+    rows
+      .filter((r) => !excludeId || r.id !== excludeId)
+      .map((r) => r.slug)
+  )
+
+  if (!taken.has(base)) return base
 
   for (let i = 2; i < 1000; i++) {
     const candidate = `${base}-${i}`
-    if (await isAvailable(candidate)) return candidate
+    if (!taken.has(candidate)) return candidate
   }
 
-  // Extremely unlikely fallback
   return `${base}-${Date.now()}`
 }

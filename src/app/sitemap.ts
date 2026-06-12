@@ -9,6 +9,8 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://hagscancook.com'
  * Includes all static public routes plus every published recipe.
  * Auth-only and admin routes are intentionally excluded.
  */
+export const revalidate = 86400 // 24 hours
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const recipes = await db.recipe.findMany({
     where: { status: 'published', deletedAt: null },

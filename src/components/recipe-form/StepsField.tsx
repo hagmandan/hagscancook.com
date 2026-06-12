@@ -1,65 +1,26 @@
 'use client'
 
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from '@dnd-kit/core'
-import {
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable'
+import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { useFieldArray, useWatch, type UseFormReturn, type Control } from 'react-hook-form'
+import { SortableList } from './SortableList'
+import { useFieldArray, useFormContext, useWatch, type UseFormReturn, type Control } from 'react-hook-form'
 import type { RecipeFormValues } from '@/lib/schemas/recipe'
 import { LIMITS } from '@/lib/schemas/recipe'
 import { CharCounter } from '@/components/ui/CharCounter'
 import styles from './StepsField.module.css'
 
-interface StepsFieldProps {
-  form: UseFormReturn<RecipeFormValues>
-}
-
-export function StepsField({ form }: StepsFieldProps) {
-  const { control, register, formState: { errors } } = form
+export function StepsField() {
+  const { control, register, formState: { errors } } = useFormContext<RecipeFormValues>()
 
   const { fields, append, remove, move } = useFieldArray({
     control,
     name: 'steps',
   })
 
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  )
-
-  function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event
-    if (!over || active.id === over.id) return
-    const oldIndex = fields.findIndex((f) => f.id === active.id)
-    const newIndex = fields.findIndex((f) => f.id === over.id)
-    if (oldIndex !== -1 && newIndex !== -1) move(oldIndex, newIndex)
-  }
-
   return (
     <div className={styles.root}>
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-      >
-        <SortableContext
-          items={fields.map((f) => f.id)}
-          strategy={verticalListSortingStrategy}
-        >
+      <SortableList fields={fields} onMove={move}>
+        <ol className={styles.list}>
           {fields.map((field, index) => (
             <SortableStep
               key={field.id}
@@ -71,8 +32,8 @@ export function StepsField({ form }: StepsFieldProps) {
               onRemove={() => remove(index)}
             />
           ))}
-        </SortableContext>
-      </DndContext>
+        </ol>
+      </SortableList>
 
       <button
         type="button"
@@ -117,7 +78,7 @@ function SortableStep({ id, index, control, register, error, onRemove }: Sortabl
   }
 
   return (
-    <div ref={setNodeRef} style={style} className={styles.row}>
+    <li ref={setNodeRef} style={style} className={styles.row}>
       <button
         type="button"
         className={styles.handle}
@@ -151,6 +112,6 @@ function SortableStep({ id, index, control, register, error, onRemove }: Sortabl
       >
         ✕
       </button>
-    </div>
+    </li>
   )
 }

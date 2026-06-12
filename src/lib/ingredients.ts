@@ -3,7 +3,29 @@
  * (recipes, pantry, …).
  */
 
+import { cache } from 'react'
 import { db } from '@/lib/db'
+
+/**
+ * Returns the default ingredient type ID to use when no typeId is provided.
+ * Prefers the "Produce" type; falls back to any available type.
+ *
+ * The two `findFirst` calls are issued in parallel via `Promise.all`, reducing
+ * latency compared to sequential queries.
+ *
+ * Wrapped in React's `cache()`, which deduplicates calls within a React Server
+ * Component render tree (e.g. if `resolveIngredient` is called from a page
+ * component). Note: `cache()` has no effect inside Server Actions — each
+ * Server Action invocation gets its own cache scope — so the deduplication
+ * benefit only applies in RSC contexts.
+ */
+const getDefaultTypeId = cache(async (): Promise<string | undefined> => {
+  const [produce, first] = await Promise.all([
+    db.ingredientType.findFirst({ where: { slug: 'produce' }, select: { id: true } }),
+    db.ingredientType.findFirst({ select: { id: true } }),
+  ])
+  return produce?.id ?? first?.id
+})
 
 /**
  * Finds or creates a canonical Ingredient by name (case-insensitive).
@@ -26,17 +48,7 @@ export async function resolveIngredient(name: string, typeId?: string): Promise<
   let resolvedTypeId = typeId
 
   if (!resolvedTypeId) {
-    resolvedTypeId = (
-      await db.ingredientType.findFirst({
-        where: { slug: 'produce' },
-        select: { id: true },
-      })
-    )?.id
-  }
-
-  if (!resolvedTypeId) {
-    const first = await db.ingredientType.findFirst({ select: { id: true } })
-    resolvedTypeId = first?.id
+    resolvedTypeId = await getDefaultTypeId()
   }
 
   if (!resolvedTypeId) {

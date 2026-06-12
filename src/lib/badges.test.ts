@@ -133,34 +133,24 @@ describe('checkAndAwardBadges — COMMUNITY_FAVORITE', () => {
 })
 
 describe('checkAndAwardBadges — HIT_MAKER', () => {
-  it('returns 0 when user has no recipes', async () => {
-    mockRecipeFindMany.mockResolvedValue([])
-    mockBadgeFindMany.mockResolvedValue([])
-
-    const result = await checkAndAwardBadges('user-1', 'HIT_MAKER')
-
-    expect(result).toEqual([])
-    expect(mockFavGroupBy).not.toHaveBeenCalled()
-  })
-
-  it('returns empty when user has recipes but no favorites yet', async () => {
-    mockRecipeFindMany.mockResolvedValue([
-      { id: 'recipe-a' },
-    ] as Awaited<ReturnType<typeof db.recipe.findMany>>)
+  it('returns 0 when user has no favorited recipes', async () => {
     mockFavGroupBy.mockResolvedValue([])
     mockBadgeFindMany.mockResolvedValue([])
 
     const result = await checkAndAwardBadges('user-1', 'HIT_MAKER')
 
     expect(result).toEqual([])
+    expect(mockFavGroupBy).toHaveBeenCalledWith({
+      by: ['recipeId'],
+      where: {
+        recipe: { authorId: 'user-1', status: 'published', deletedAt: null },
+      },
+      _count: { _all: true },
+    })
     expect(mockBadgeCreateMany).not.toHaveBeenCalled()
   })
 
   it("returns max favorites across the user's recipes", async () => {
-    mockRecipeFindMany.mockResolvedValue([
-      { id: 'recipe-a' },
-      { id: 'recipe-b' },
-    ] as Awaited<ReturnType<typeof db.recipe.findMany>>)
     mockFavGroupBy.mockResolvedValue([
       { recipeId: 'recipe-a', _count: { _all: 25 } },
       { recipeId: 'recipe-b', _count: { _all: 4 } },
@@ -170,6 +160,7 @@ describe('checkAndAwardBadges — HIT_MAKER', () => {
     const result = await checkAndAwardBadges('user-1', 'HIT_MAKER')
 
     expect(result.map((r) => r.tier)).toEqual(['IRON', 'BRONZE', 'SILVER'])
+    expect(mockRecipeFindMany).not.toHaveBeenCalled()
   })
 })
 

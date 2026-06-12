@@ -18,18 +18,13 @@ export default async function ProfilePage() {
   const session = await requireSession()
   const userId = session.userId
 
-  const recipeIds = await db.recipe
-    .findMany({ where: { authorId: userId, status: 'published', deletedAt: null }, select: { id: true } })
-    .then((rows) => rows.map((r) => r.id))
-
-  const hitMakerGroups =
-    recipeIds.length > 0
-      ? await db.favorite.groupBy({
-          by: ['recipeId'],
-          where: { recipeId: { in: recipeIds } },
-          _count: { _all: true },
-        })
-      : []
+  const hitMakerGroups = await db.favorite.groupBy({
+    by: ['recipeId'],
+    where: {
+      recipe: { authorId: userId, status: 'published', deletedAt: null },
+    },
+    _count: { _all: true },
+  })
 
   const [badges, pantryCt, recipeCt, communityFavCt] = await Promise.all([
     db.userBadge.findMany({

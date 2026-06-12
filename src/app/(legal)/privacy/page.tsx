@@ -6,6 +6,8 @@ export const metadata: Metadata = {
   description: 'Privacy Policy for hags can cook.',
 }
 
+export const revalidate = false
+
 const UPDATED = 'June 1, 2026'
 
 export default function PrivacyPage() {

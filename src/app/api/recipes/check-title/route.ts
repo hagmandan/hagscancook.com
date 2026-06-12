@@ -12,14 +12,19 @@ export async function GET(request: NextRequest) {
   const excludeId = searchParams.get('excludeId') ?? undefined
 
   const slug = toSlug(title)
-  if (!slug) return NextResponse.json({ taken: false, slug: '' })
+  if (!slug) return NextResponse.json({ error: 'Title too short' }, { status: 400 })
 
   const existing = await db.recipe.findUnique({
-    where: { slug },
+    where: { slug, deletedAt: null },
     select: { id: true },
   })
 
   const taken = !!existing && existing.id !== excludeId
 
-  return NextResponse.json({ taken, slug })
+  return NextResponse.json(
+    { taken, slug },
+    {
+      headers: { 'Cache-Control': 'private, max-age=60' },
+    }
+  )
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { type UseFormReturn } from 'react-hook-form'
+import { useFormContext } from 'react-hook-form'
 import { useTitleAvailability } from '@/lib/hooks/useTitleAvailability'
 import type { RecipeFormValues } from '@/lib/schemas/recipe'
 import { LIMITS } from '@/lib/schemas/recipe'
@@ -26,7 +26,6 @@ const TABS: { id: Tab; label: string }[] = [
 ]
 
 interface GuidedModeProps {
-  form: UseFormReturn<RecipeFormValues>
   tags: { id: string; name: string }[]
   ingredientTypes: { id: string; name: string }[]
   recipeId?: string
@@ -38,9 +37,9 @@ interface GuidedModeProps {
 const dietaryOptions = DIETARY_RESTRICTIONS.map((d) => ({ label: d, value: d }))
 const cookingMethodOptions = COOKING_METHODS.map((m) => ({ label: m, value: m }))
 
-export function GuidedMode({ form, tags, ingredientTypes, recipeId, coverImageStatus, consentGiven, onConsentChange }: GuidedModeProps) {
+export function GuidedMode({ tags, ingredientTypes, recipeId, coverImageStatus, consentGiven, onConsentChange }: GuidedModeProps) {
   const [activeTab, setActiveTab] = useState<Tab>('about')
-  const { register, watch, setValue, formState: { errors } } = form
+  const { register, watch, setValue, formState: { errors } } = useFormContext<RecipeFormValues>()
   const { isUploading, uploadError, fileInputRef, handleCoverUpload } = useCoverUpload(setValue)
   const coverImageUrl = watch('coverImageUrl')
 
@@ -271,7 +270,7 @@ export function GuidedMode({ form, tags, ingredientTypes, recipeId, coverImageSt
         {activeTab === 'ingredients' && (
           <div className={styles.fields}>
             <p className={styles.hint}>Add your ingredients. You can drag to reorder them.</p>
-            <IngredientsField form={form} ingredientTypes={ingredientTypes} />
+            <IngredientsField ingredientTypes={ingredientTypes} />
           </div>
         )}
 
@@ -279,7 +278,7 @@ export function GuidedMode({ form, tags, ingredientTypes, recipeId, coverImageSt
         {activeTab === 'steps' && (
           <div className={styles.fields}>
             <p className={styles.hint}>Walk cooks through each step. Keep steps focused — one action at a time.</p>
-            <StepsField form={form} />
+            <StepsField />
           </div>
         )}
 

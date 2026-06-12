@@ -1,20 +1,9 @@
 'use client'
 
-/**
- * Root recipe form component.
- *
- * Owns the single `useForm()` instance shared by ChefMode and GuidedMode.
- * Mode is controlled by the `mode` URL query param — switching modes is a
- * layout change only, never a form reset (shouldUnregister defaults to false
- * in React Hook Form v7, so unmounted fields keep their values).
- *
- * Used by both /recipes/new (no initialValues) and /recipes/[slug]/edit
- * (initialValues populated from the DB).
- */
 
 import { useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { useForm, type Resolver } from 'react-hook-form'
+import { useForm, FormProvider, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { RecipeSchema, type RecipeFormValues } from '@/lib/schemas/recipe'
 import { createRecipe, updateRecipe } from '@/lib/actions/recipes'
@@ -109,11 +98,13 @@ export function RecipeForm({ initialValues, recipeId, initialStatus = 'draft', c
         initialStatus={initialStatus}
       />
 
-      {mode === 'guided' ? (
-        <GuidedMode form={form} tags={tags} ingredientTypes={ingredientTypes} recipeId={recipeId} coverImageStatus={coverImageStatus} consentGiven={consentGiven} onConsentChange={setConsentGiven} />
-      ) : (
-        <ChefMode form={form} tags={tags} ingredientTypes={ingredientTypes} recipeId={recipeId} coverImageStatus={coverImageStatus} consentGiven={consentGiven} onConsentChange={setConsentGiven} />
-      )}
+      <FormProvider {...form}>
+        {mode === 'guided' ? (
+          <GuidedMode tags={tags} ingredientTypes={ingredientTypes} recipeId={recipeId} coverImageStatus={coverImageStatus} consentGiven={consentGiven} onConsentChange={setConsentGiven} />
+        ) : (
+          <ChefMode tags={tags} ingredientTypes={ingredientTypes} recipeId={recipeId} coverImageStatus={coverImageStatus} consentGiven={consentGiven} onConsentChange={setConsentGiven} />
+        )}
+      </FormProvider>
     </div>
   )
 }

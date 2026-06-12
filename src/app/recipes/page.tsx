@@ -9,6 +9,7 @@
  * work without client-side JS.
  */
 
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { db } from '@/lib/db'
 import { requireSession } from '@/lib/auth'
@@ -79,8 +80,22 @@ async function getTags() {
   return db.tag.findMany({ orderBy: { name: 'asc' } })
 }
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'Recipes',
+  description: 'Browse all published recipes from the hags can cook community. Filter by cuisine, dietary restriction, or tag.',
+  openGraph: {
+    title: 'Recipes — hags can cook',
+    description: 'Browse all published recipes from the hags can cook community.',
+    url: '/recipes',
+    type: 'website',
+  },
+  twitter: {
+    title: 'Recipes — hags can cook',
+    description: 'Browse all published recipes from the hags can cook community.',
+  },
+  alternates: {
+    canonical: '/recipes',
+  },
 }
 
 export default async function RecipesPage({ searchParams }: RecipesPageProps) {
