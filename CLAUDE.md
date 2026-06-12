@@ -45,17 +45,21 @@ E2E tests bypass Firebase by setting `E2E_TEST_AUTH=1` and a magic cookie value;
 
 All mutations live in `src/lib/actions/`. Each action:
 - Calls `requireSession()` first (re-verifies auth)
-- Validates input with Zod (`src/lib/schemas/`)
-- Calls `revalidatePath()` on affected routes after success
-- Returns `{ slug }` on success or `{ error: string }` on failure — never throws to the client
+- Validates input with Zod using `parseOrError()` from `src/lib/schemas/validation.ts` — do not repeat the `safeParse` boilerplate inline
+- Calls `revalidateRecipeFeeds(slug?)` from `src/lib/utils/revalidation.ts` after any recipe mutation — do not call `revalidatePath` for `'/'`, `'/recipes'`, `'/my-recipes'` individually
+- Returns `{ data } | { error: string }` on success/failure — never throws to the client
+
+`parseOrError(schema, input, fallbackMessage?)` runs `safeParse` and returns `{ data: T }` on success or `{ error: string }` with the first issue message on failure.
 
 ### Recipe form
 
-`RecipeForm` (`src/components/recipe-form/RecipeForm.tsx`) owns a single `useForm()` instance shared between two render modes:
+`RecipeForm` (`src/components/recipe-form/RecipeForm.tsx`) owns a single `useForm()` instance wrapped in `<FormProvider>` and shared between two render modes:
 - **Chef mode** — free-form, power-user layout
 - **Guided mode** — step-by-step wizard
 
 Mode is controlled by the `?mode=` URL query param. Switching modes never resets the form — RHF v7 keeps unmounted field values by default (`shouldUnregister: false`). The same `RecipeForm` component handles both create (`/recipes/new`) and edit (`/recipes/[slug]/edit`).
+
+Child components (`ChefMode`, `GuidedMode`, `IngredientsField`, `StepsField`) access the form via `useFormContext<RecipeFormValues>()` — do not prop-drill the `form` object. Drag-and-drop list fields use `<SortableList fields onMove>` from `src/components/recipe-form/SortableList.tsx` rather than duplicating dnd-kit setup.
 
 ### Robots / crawl policy
 
