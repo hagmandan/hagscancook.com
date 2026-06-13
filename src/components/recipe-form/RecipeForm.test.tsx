@@ -3,9 +3,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
-import { useSearchParams, useRouter, usePathname } from 'next/navigation'
+import { useSearchParams, useRouter as _useRouter, usePathname as _usePathname } from 'next/navigation'
 import { createRecipe, updateRecipe } from '@/lib/actions/recipes'
-import { useToast } from '@/lib/toast'
+import { useToast as _useToast } from '@/lib/toast'
 
 // ── CSS module mocks ──────────────────────────────────────────────────────────
 vi.mock('./RecipeForm.module.css', () => ({ default: {} }))

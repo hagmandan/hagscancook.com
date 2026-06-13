@@ -11,7 +11,9 @@ import { z } from 'zod'
 import { db } from '@/lib/db'
 import { requireAdmin } from '@/lib/auth'
 import { toSlug } from '@/lib/utils/slugify'
+import { parseOrError } from '@/lib/schemas/validation'
 import { captureException } from '@/lib/monitoring/errors'
+import { revalidateRecipeFeeds } from '@/lib/utils/revalidation'
 import type { Role } from '@prisma/client'
 
 // ---------------------------------------------------------------------------
@@ -36,9 +38,7 @@ export async function unpublishRecipe(
     where: { id: recipeId },
     data: { status: 'draft' },
   })
-  revalidatePath('/')
-  revalidatePath('/recipes')
-  revalidatePath(`/recipes/${recipe.slug}`)
+  revalidateRecipeFeeds(recipe.slug)
   revalidatePath('/admin')
   return { ok: true }
 }
@@ -60,9 +60,7 @@ export async function adminDeleteRecipe(
     where: { id: recipeId },
     data: { deletedAt: new Date() },
   })
-  revalidatePath(`/recipes/${recipe.slug}`)
-  revalidatePath('/')
-  revalidatePath('/recipes')
+  revalidateRecipeFeeds(recipe.slug)
   revalidatePath('/admin')
   return { ok: true }
 }
@@ -158,12 +156,12 @@ export async function createTag(
   formData: FormData
 ): Promise<{ ok: true } | { error: string }> {
   await requireAdmin()
-  const parsed = TagSchema.safeParse({ name: formData.get('name') })
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Invalid' }
+  const result = parseOrError(TagSchema, { name: formData.get('name') })
+  if ('error' in result) return result
 
-  const slug = toSlug(parsed.data.name)
+  const slug = toSlug(result.data.name)
   try {
-    await db.tag.create({ data: { name: parsed.data.name, slug } })
+    await db.tag.create({ data: { name: result.data.name, slug } })
   } catch (err) {
     captureException(err, { feature: 'admin', operation: 'create-tag', runtime: 'server' })
     return { error: 'A tag with that name already exists' }
@@ -195,12 +193,12 @@ export async function createIngredientType(
   formData: FormData
 ): Promise<{ ok: true } | { error: string }> {
   await requireAdmin()
-  const parsed = IngredientTypeSchema.safeParse({ name: formData.get('name') })
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Invalid' }
+  const result = parseOrError(IngredientTypeSchema, { name: formData.get('name') })
+  if ('error' in result) return result
 
-  const slug = toSlug(parsed.data.name)
+  const slug = toSlug(result.data.name)
   try {
-    await db.ingredientType.create({ data: { name: parsed.data.name, slug } })
+    await db.ingredientType.create({ data: { name: result.data.name, slug } })
   } catch (err) {
     captureException(err, { feature: 'admin', operation: 'create-ingredient-type', runtime: 'server' })
     return { error: 'An ingredient type with that name already exists' }
@@ -223,17 +221,17 @@ export async function createIngredient(
   formData: FormData
 ): Promise<{ ok: true } | { error: string }> {
   await requireAdmin()
-  const parsed = IngredientSchema.safeParse({
+  const result = parseOrError(IngredientSchema, {
     name: formData.get('name'),
     typeId: formData.get('typeId'),
   })
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Invalid' }
+  if ('error' in result) return result
 
   try {
     await db.ingredient.create({
       data: {
-        name: parsed.data.name.toLowerCase().trim(),
-        typeId: parsed.data.typeId,
+        name: result.data.name.toLowerCase().trim(),
+        typeId: result.data.typeId,
       },
     })
   } catch (err) {

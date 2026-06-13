@@ -11,6 +11,7 @@
     "import-recipes": "tsx scripts/import-recipes.ts",
     "seed:dev": "tsx prisma/dev-seed.ts",
     "test": "vitest",
+    "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
     "test:e2e": "playwright test",

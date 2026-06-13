@@ -1,58 +1,30 @@
-/**
- * Recipe Server Actions.
- *
- * All mutations go through these functions. Each re-verifies auth with
- * `requireSession()` before touching the DB — Server Actions are reachable
- * via direct POST and must not trust the proxy layer alone.
- *
- * Ingredient handling:
- *   Canonical `Ingredient` rows are upserted by name (case-insensitive).
- *   New ingredients default to the "Produce" ingredient type; an admin can
- *   re-categorise them via /admin/ingredients.
- */
-
+// Each action re-verifies auth — Server Actions are reachable via direct POST and must not trust the proxy alone.
 'use server'
 
-import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { requireSession } from '@/lib/auth'
 import type { Prisma } from '@prisma/client'
 import { RecipeSchema, type RecipeFormValues } from '@/lib/schemas/recipe'
+import { parseOrError } from '@/lib/schemas/validation'
 import { generateUniqueSlug } from '@/lib/utils/slugify'
 import { resolveIngredient } from '@/lib/ingredients'
 import { captureException } from '@/lib/monitoring/errors'
 import { FEED_PAGE_SIZE } from '@/lib/constants/pagination'
 import { checkAndAwardBadges, type NewBadge } from '@/lib/badges'
+import { revalidateRecipeFeeds } from '@/lib/utils/revalidation'
 
-// ---------------------------------------------------------------------------
-// createRecipe
-// ---------------------------------------------------------------------------
 
-/**
- * Creates a new recipe draft owned by the current user.
- *
- * Validates input with RecipeSchema, generates a unique slug from the title,
- * upserts canonical ingredients, then writes the recipe + all related rows
- * in a single transaction.
- *
- * @param formData - Raw form values from RecipeForm
- * @param publish - When true, sets status to `published` immediately
- * @returns The new recipe's slug (for redirect)
- * @throws Redirects to /login if unauthenticated
- */
 export async function createRecipe(
   formData: RecipeFormValues,
   publish = false
 ): Promise<{ slug: string; newBadges: NewBadge[] } | { error: string }> {
   const session = await requireSession()
 
-  const parsed = RecipeSchema.safeParse(formData)
-  if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? 'Invalid recipe data' }
-  }
+  const result = parseOrError(RecipeSchema, formData, 'Invalid recipe data')
+  if ('error' in result) return result
+  const data = result.data
 
-  const data = parsed.data
   const slug = await generateUniqueSlug(data.title)
 
   // Resolve ingredient IDs (find or create canonical ingredients)
@@ -104,9 +76,7 @@ export async function createRecipe(
       ? await checkAndAwardBadges(session.userId, 'RECIPE_AUTHOR')
       : []
 
-    revalidatePath('/')
-    revalidatePath('/recipes')
-    revalidatePath('/my-recipes')
+    revalidateRecipeFeeds()
 
     return { slug: recipe.slug, newBadges }
   } catch (err) {
@@ -121,22 +91,8 @@ export async function createRecipe(
   }
 }
 
-// ---------------------------------------------------------------------------
-// updateRecipe
-// ---------------------------------------------------------------------------
 
-/**
- * Updates an existing recipe owned by the current user (or any recipe for admins).
- *
- * Replaces steps, ingredients, and tags wholesale rather than diffing them,
- * which keeps the logic simple for MVP.
- *
- * @param recipeId - The recipe's UUID
- * @param formData - Raw form values from RecipeForm
- * @param publish - When true, sets status to `published`
- * @returns The (potentially updated) recipe slug
- * @throws Redirects to /login if unauthenticated; returns error if not owner
- */
+// Replaces steps, ingredients, and tags wholesale rather than diffing — intentional MVP simplicity.
 export async function updateRecipe(
   recipeId: string,
   formData: RecipeFormValues,
@@ -154,12 +110,9 @@ export async function updateRecipe(
     return { error: 'Not authorised to edit this recipe' }
   }
 
-  const parsed = RecipeSchema.safeParse(formData)
-  if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? 'Invalid recipe data' }
-  }
-
-  const data = parsed.data
+  const result = parseOrError(RecipeSchema, formData, 'Invalid recipe data')
+  if ('error' in result) return result
+  const data = result.data
 
   // Re-generate slug only if title changed
   const slug =
@@ -227,10 +180,7 @@ export async function updateRecipe(
       ? await checkAndAwardBadges(session.userId, 'RECIPE_AUTHOR')
       : []
 
-    revalidatePath('/')
-    revalidatePath('/recipes')
-    revalidatePath(`/recipes/${slug}`)
-    revalidatePath('/my-recipes')
+    revalidateRecipeFeeds(slug)
 
     return { slug, newBadges }
   } catch (err) {
@@ -246,16 +196,7 @@ export async function updateRecipe(
   }
 }
 
-// ---------------------------------------------------------------------------
-// deleteRecipe (soft delete)
-// ---------------------------------------------------------------------------
 
-/**
- * Soft-deletes a recipe by setting `deletedAt`. Never hard-deletes.
- *
- * @param recipeId - The recipe's UUID
- * @throws Returns error if user is not the author or admin
- */
 export async function deleteRecipe(
   recipeId: string
 ): Promise<{ ok: true } | { error: string }> {
@@ -277,10 +218,7 @@ export async function deleteRecipe(
       data: { deletedAt: new Date() },
     })
 
-    revalidatePath('/')
-    revalidatePath('/recipes')
-    revalidatePath(`/recipes/${existing.slug}`)
-    revalidatePath('/my-recipes')
+    revalidateRecipeFeeds(existing.slug)
   } catch (err) {
     captureException(err, {
       feature: 'recipe-form',
@@ -295,9 +233,6 @@ export async function deleteRecipe(
   redirect('/my-recipes')
 }
 
-// ---------------------------------------------------------------------------
-// loadMoreRecipes
-// ---------------------------------------------------------------------------
 
 export type RecipeFilters = {
   cuisine?: string
@@ -374,16 +309,7 @@ export async function loadMoreRecipes(
   }
 }
 
-// ---------------------------------------------------------------------------
-// toggleRecipeStatus
-// ---------------------------------------------------------------------------
 
-/**
- * Flips a recipe's status between draft and published.
- * The recipe's author or an admin can call this.
- *
- * @param recipeId - The recipe's UUID
- */
 export async function toggleRecipeStatus(
   recipeId: string
 ): Promise<{ status: 'draft' | 'published' } | { error: string }> {
@@ -407,10 +333,7 @@ export async function toggleRecipeStatus(
       data: { status: newStatus },
     })
 
-    revalidatePath('/')
-    revalidatePath('/my-recipes')
-    revalidatePath(`/recipes/${existing.slug}`)
-    revalidatePath('/recipes')
+    revalidateRecipeFeeds(existing.slug)
 
     return { status: newStatus }
   } catch (err) {
